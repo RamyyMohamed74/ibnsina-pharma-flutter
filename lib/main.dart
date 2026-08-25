@@ -16,7 +16,7 @@ class IbnSinaPharmaApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red,
+          seedColor: Colors.green,
         ),
       ),
       home: const LoginPage(),

@@ -25,22 +25,16 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(
-                    Icons.local_pharmacy,
-                    size: 80,
-                    color: Colors.green,
+                  Image.asset(
+                    'assets/images/ibn_sina_pharma_logo.webp.webp',
+                    height: 200,
+                    width : 200,
+                    fit: BoxFit.contain,
                   ),
 
-                  const SizedBox(height: 20),
+                  
 
-                  const Text(
-                    'Ibn Sina Pharma',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            
 
                   const SizedBox(height: 8),
 
@@ -134,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed:() {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: const Color.fromARGB(255, 76, 87, 175),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
