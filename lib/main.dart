@@ -5,9 +5,21 @@ void main() {
   runApp(const IbnSinaPharmaApp());
 }
 
-class IbnSinaPharmaApp extends StatelessWidget {
+class IbnSinaPharmaApp extends StatefulWidget {
   const IbnSinaPharmaApp({super.key});
 
+  @override
+  State<IbnSinaPharmaApp> createState() => _IbnSinaPharmaAppState();
+}
+
+class _IbnSinaPharmaAppState extends State<IbnSinaPharmaApp> {
+  bool _isDarkMode = false;
+
+  void _toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,9 +29,27 @@ class IbnSinaPharmaApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
+          brightness: Brightness.light,
         ),
       ),
-      home: const LoginPage(),
+
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor : Colors.green, 
+          brightness: Brightness.dark,
+          ),
+      ),
+
+      themeMode: _isDarkMode
+        ? ThemeMode.dark
+        : ThemeMode.light,
+      
+      home: LoginPage(
+        onToggleTheme: _toggleTheme,
+        isDarkMode: _isDarkMode,
+      ),
+
     );
   }
 }

@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final VoidCallback onToggleTheme;
+  final bool isDarkMode;
+
+  const LoginPage({
+    super.key,
+    required this.onToggleTheme,
+    required this.isDarkMode,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
+
 
 class _LoginPageState extends State<LoginPage> {
   
@@ -25,6 +33,20 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: widget.onToggleTheme,
+                      icon: Icon(
+                        widget.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                      ),
+                      tooltip: widget.isDarkMode
+                          ? 'Switch to light mode'
+                          : 'Switch to dark mode',
+                    ),
+                  ),
                   Image.asset(
                     'assets/images/ibn_sina_pharma_logo.webp.webp',
                     height: 200,
