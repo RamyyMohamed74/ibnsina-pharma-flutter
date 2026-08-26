@@ -48,26 +48,23 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   Image.asset(
-                    'assets/images/ibn_sina_pharma_logo.webp.webp',
-                    height: 200,
-                    width : 200,
+                    'assets/images/ibnsina-pharma-logo.png',
+                    height: 300,
+                    width : 300,
                     fit: BoxFit.contain,
                   ),
 
-                  
-
-            
-
-                  const SizedBox(height: 8),
-
-                  const Text(
+                  Transform.translate(
+                   offset: const Offset(0, -50),
+                  child: const Text(
                     'Your trusted pharmacy at your fingertips',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey,
+                    fontSize: 20,
+                    color: Colors.grey,
                     ),
                   ),
+                ),
 
                   const SizedBox(height: 40),
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'first_page.dart';
+import 'welcome_page.dart';
+import 'first_page.dart' ;
 
 void main() {
   runApp(const IbnSinaPharmaApp());
@@ -17,9 +18,10 @@ class _IbnSinaPharmaAppState extends State<IbnSinaPharmaApp> {
 
   void _toggleTheme() {
     setState(() {
-      _isDarkMode = !_isDarkMode;
+      _isDarkMode = !_isDarkMode ;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,11 +47,10 @@ class _IbnSinaPharmaAppState extends State<IbnSinaPharmaApp> {
         ? ThemeMode.dark
         : ThemeMode.light,
       
-      home: LoginPage(
-        onToggleTheme: _toggleTheme,
-        isDarkMode: _isDarkMode,
-      ),
-
+      home: WelcomePage(
+      onToggleTheme: _toggleTheme,
+      isDarkMode: _isDarkMode,
+        ),
     );
   }
 }
