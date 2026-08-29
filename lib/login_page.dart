@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onToggleTheme;
@@ -14,13 +15,86 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-
 class _LoginPageState extends State<LoginPage> {
-  
+
+  // Name controller - required by the task
+  final TextEditingController _nameController = TextEditingController();
+
+  // Existing controllers
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
+
+  // Login function
+  void _login() {
+    // Check if name is empty
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your name'),
+        ),
+      );
+      return;
+    }
+
+    // Check email and password validation
+    // We keep your existing requirements.
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email'),
+        ),
+      );
+      return;
+    }
+
+    if (!_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email'),
+        ),
+      );
+      return;
+    }
+
+    if (_passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your password'),
+        ),
+      );
+      return;
+    }
+
+    if (_passwordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password must be at least 6 characters'),
+        ),
+      );
+      return;
+    }
+
+    // Navigate to Home Page and pass the user's name
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomePage(
+          name: _nameController.text.trim(),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +107,11 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+
+                  // =========================
+                  // DARK / BRIGHT MODE BUTTON
+                  // =========================
+
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
@@ -43,30 +122,58 @@ class _LoginPageState extends State<LoginPage> {
                             : Icons.dark_mode,
                       ),
                       tooltip: widget.isDarkMode
-                          ? 'Switch to light mode'
+                          ? 'Switch to bright mode'
                           : 'Switch to dark mode',
                     ),
                   ),
+
+                  // =========================
+                  // LOGO
+                  // =========================
+
                   Image.asset(
                     'assets/images/ibnsina-pharma-logo.png',
                     height: 300,
-                    width : 300,
+                    width: 300,
                     fit: BoxFit.contain,
                   ),
 
                   Transform.translate(
-                   offset: const Offset(0, -50),
-                  child: const Text(
-                    'Your trusted pharmacy at your fingertips',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.grey,
+                    offset: const Offset(0, -50),
+                    child: const Text(
+                      'Your trusted pharmacy at your fingertips',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
-                ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
+
+                  // =========================
+                  // NAME
+                  // =========================
+
+                  TextFormField(
+                    controller: _nameController,
+                    keyboardType: TextInputType.name,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      hintText: 'Enter your name',
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // =========================
+                  // EMAIL
+                  // =========================
 
                   TextFormField(
                     controller: _emailController,
@@ -79,20 +186,13 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-
-                      return null;
-                    },
                   ),
 
                   const SizedBox(height: 20),
+
+                  // =========================
+                  // PASSWORD
+                  // =========================
 
                   TextFormField(
                     controller: _passwordController,
@@ -117,20 +217,13 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-
-                      return null;
-                    },
                   ),
 
                   const SizedBox(height: 12),
+
+                  // =========================
+                  // FORGOT PASSWORD
+                  // =========================
 
                   Align(
                     alignment: Alignment.centerRight,
@@ -142,12 +235,17 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 12),
 
+                  // =========================
+                  // LOGIN BUTTON
+                  // =========================
+
                   SizedBox(
                     height: 55,
                     child: ElevatedButton(
-                      onPressed:() {},
+                      onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 76, 87, 175),
+                        backgroundColor:
+                            const Color.fromARGB(255, 76, 87, 175),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -164,6 +262,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // =========================
+                  // CREATE ACCOUNT
+                  // =========================
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
