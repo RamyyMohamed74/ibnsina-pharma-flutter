@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'first_page.dart';
+import 'login_page.dart';
 
 class WelcomePage extends StatefulWidget {
   final VoidCallback onToggleTheme;

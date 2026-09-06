@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'welcome_page.dart';
-import 'first_page.dart' ;
+import 'login_page.dart' ;
 
 void main() {
   runApp(const IbnSinaPharmaApp());

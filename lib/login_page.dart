@@ -26,6 +26,13 @@ class _LoginPageState extends State<LoginPage> {
       TextEditingController();
 
   bool _obscurePassword = true;
+  late bool _isDarkMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDarkMode = widget.isDarkMode;
+  }
 
   // Login function
   void _login() {
@@ -115,15 +122,21 @@ class _LoginPageState extends State<LoginPage> {
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
-                      onPressed: widget.onToggleTheme,
-                      icon: Icon(
-                        widget.isDarkMode
-                            ? Icons.light_mode
-                            : Icons.dark_mode,
+                      onPressed: () {
+                        widget.onToggleTheme();
+                        setState(() {
+                          _isDarkMode = !_isDarkMode;
+                        });
+                      },
+                      icon: Icon (
+                        _isDarkMode
+                            ?Icons.light_mode
+                            :Icons.dark_mode,
                       ),
-                      tooltip: widget.isDarkMode
-                          ? 'Switch to bright mode'
-                          : 'Switch to dark mode',
+                      tooltip: _isDarkMode
+                          ?'Switch to bright mode'
+                          :'Switch to dark mode',
+                            
                     ),
                   ),
 
