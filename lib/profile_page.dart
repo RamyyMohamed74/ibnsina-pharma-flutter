@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'orders_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final String name;
@@ -25,6 +26,8 @@ class ProfilePage extends StatelessWidget {
 
           const SizedBox(height: 30),
 
+          // PROFILE INFORMATION
+
           ListTile(
             leading: const CircleAvatar(
               child: Icon(Icons.person),
@@ -40,21 +43,61 @@ class ProfilePage extends StatelessWidget {
 
           const Divider(),
 
+          const SizedBox(height: 5),
+
+          // MY ORDERS
+
           ListTile(
-            leading: const Icon(Icons.receipt_long),
-            title: const Text('My Orders'),
+            leading: const Icon(
+              Icons.receipt_long,
+            ),
+            title: const Text(
+              'My Orders',
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const OrdersPage(),
+                ),
+              );
+            },
+          ),
+
+          // MY ADDRESSES
+
+          ListTile(
+            leading: const Icon(
+              Icons.location_on_outlined,
+            ),
+            title: const Text(
+              'My Addresses',
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+            ),
             onTap: () {},
           ),
 
-          ListTile(
-            leading: const Icon(Icons.location_on_outlined),
-            title: const Text('My Addresses'),
-            onTap: () {},
-          ),
+          // SETTINGS
 
           ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Settings'),
+            leading: const Icon(
+              Icons.settings_outlined,
+            ),
+            title: const Text(
+              'Settings',
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+            ),
             onTap: () {},
           ),
         ],
@@ -62,3 +105,4 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+
