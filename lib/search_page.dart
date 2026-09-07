@@ -20,18 +20,14 @@ class _SearchPageState extends State<SearchPage> {
 
   String _searchText = '';
 
-  // =================================
   // PRODUCTS FROM API
-  // =================================
 
   List<dynamic> products = [];
 
   bool _isLoading = true;
   String? _errorMessage;
 
-  // =================================
   // LOAD PRODUCTS
-  // =================================
 
   @override
   void initState() {
@@ -62,9 +58,7 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  // =================================
   // FILTER PRODUCTS
-  // =================================
 
   List<dynamic> get filteredProducts {
     if (_searchText.trim().isEmpty) {
@@ -86,9 +80,7 @@ class _SearchPageState extends State<SearchPage> {
     }).toList();
   }
 
-  // =================================
   // DISPOSE
-  // =================================
 
   @override
   void dispose() {
@@ -96,9 +88,7 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  // =================================
   // PRODUCT CARD
-  // =================================
 
   Widget _buildProductCard(
     BuildContext context,
@@ -133,9 +123,7 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // =================================
               // IMAGE
-              // =================================
 
               Container(
                 width: 80,
@@ -147,17 +135,21 @@ class _SearchPageState extends State<SearchPage> {
                   borderRadius:
                       BorderRadius.circular(12),
                 ),
-                child: Image.asset(
-                  'assets/images/ibnsina-pharma-logo.png',
+                child: Image.network (
+                  product['imageurrl']?? '',
                   fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.asset(
+                      'assets/images/ibnsina-pharma-logo.png',
+                      fit: BoxFit.contain,
+                    );
+                  },
                 ),
               ),
 
               const SizedBox(width: 15),
 
-              // =================================
               // PRODUCT INFO
-              // =================================
 
               Expanded(
                 child: Column(
@@ -190,9 +182,7 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ),
 
-                    // =================================
                     // STOCK
-                    // =================================
 
                     const SizedBox(height: 5),
 
@@ -218,10 +208,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // =================================
-  // BUILD
-  // =================================
-
+  
   @override
   Widget build(BuildContext context) {
     final results = filteredProducts;
@@ -232,9 +219,8 @@ class _SearchPageState extends State<SearchPage> {
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          // =================================
+
           // TITLE
-          // =================================
 
           const Text(
             'Search Products',
@@ -246,9 +232,7 @@ class _SearchPageState extends State<SearchPage> {
 
           const SizedBox(height: 20),
 
-          // =================================
           // SEARCH BAR
-          // =================================
 
           TextField(
             controller: _searchController,
@@ -285,9 +269,7 @@ class _SearchPageState extends State<SearchPage> {
 
           const SizedBox(height: 25),
 
-          // =================================
           // RESULTS TITLE
-          // =================================
 
           Text(
             _searchText.isEmpty
@@ -301,9 +283,7 @@ class _SearchPageState extends State<SearchPage> {
 
           const SizedBox(height: 15),
 
-          // =================================
           // PRODUCT LIST
-          // =================================
 
           Expanded(
             child: _isLoading

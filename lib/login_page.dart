@@ -38,9 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     _isDarkMode = widget.isDarkMode;
   }
 
-  // =========================
   // LOGIN FUNCTION
-  // =========================
 
   Future<void> _login() async {
     // Check if name is empty
@@ -155,9 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
 
-                  // =========================
                   // DARK / BRIGHT MODE BUTTON
-                  // =========================
 
                   Align(
                     alignment: Alignment.topRight,
@@ -180,9 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
 
-                  // =========================
                   // LOGO
-                  // =========================
 
                   Image.asset(
                     'assets/images/ibnsina-pharma-logo.png',
@@ -205,9 +199,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
 
-                  // =========================
                   // NAME
-                  // =========================
 
                   TextFormField(
                     controller: _nameController,
@@ -226,9 +218,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 20),
 
-                  // =========================
                   // EMAIL
-                  // =========================
 
                   TextFormField(
                     controller: _emailController,
@@ -247,9 +237,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 20),
 
-                  // =========================
                   // PASSWORD
-                  // =========================
 
                   TextFormField(
                     controller: _passwordController,
@@ -281,9 +269,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 12),
 
-                  // =========================
                   // FORGOT PASSWORD
-                  // =========================
 
                   Align(
                     alignment: Alignment.centerRight,
@@ -297,9 +283,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 12),
 
-                  // =========================
                   // LOGIN BUTTON
-                  // =========================
 
                   SizedBox(
                     height: 55,
@@ -340,9 +324,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 24),
 
-                  // =========================
                   // CREATE ACCOUNT
-                  // =========================
 
                   Row(
                     mainAxisAlignment:

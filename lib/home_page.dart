@@ -20,7 +20,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // Products from API
   List<dynamic> _products = [];
 
   bool _isLoadingProducts = true;
@@ -32,9 +31,7 @@ class _HomePageState extends State<HomePage> {
     _loadProducts();
   }
 
-  // =================================
   // LOAD PRODUCTS FROM API
-  // =================================
 
   Future<void> _loadProducts() async {
     try {
@@ -45,6 +42,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _products = products;
         _isLoadingProducts = false;
+        _productsError = null;
       });
     } catch (e) {
       if (!mounted) return;
@@ -65,9 +63,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // =================================
   // SELECTED PAGE
-  // =================================
 
   Widget _buildSelectedPage() {
     switch (_selectedIndex) {
@@ -87,9 +83,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // =================================
   // HOME PAGE CONTENT
-  // =================================
 
   Widget _buildHomePage() {
     return SingleChildScrollView(
@@ -98,9 +92,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // =================================
           // WELCOME
-          // =================================
 
           Text(
             'Welcome, ${widget.name} 👋',
@@ -122,9 +114,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 24),
 
-          // =================================
           // SEARCH BAR
-          // =================================
 
           TextField(
             decoration: InputDecoration(
@@ -143,9 +133,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 28),
 
-          // =================================
           // CATEGORIES
-          // =================================
 
           const Text(
             'Categories',
@@ -191,9 +179,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 30),
 
-          // =================================
           // FEATURED PRODUCTS
-          // =================================
 
           const Text(
             'Featured Products',
@@ -211,12 +197,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // =================================
   // PRODUCTS SECTION
-  // =================================
 
   Widget _buildProductsSection() {
-    // Loading
     if (_isLoadingProducts) {
       return const SizedBox(
         height: 250,
@@ -226,7 +209,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Error
     if (_productsError != null) {
       return SizedBox(
         height: 250,
@@ -265,7 +247,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // No products
     if (_products.isEmpty) {
       return const SizedBox(
         height: 200,
@@ -280,7 +261,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Products
     return SizedBox(
       height: 250,
       child: ListView.separated(
@@ -290,12 +270,13 @@ class _HomePageState extends State<HomePage> {
           return const SizedBox(width: 15);
         },
         itemBuilder: (context, index) {
-          final product = _products[index];
+          final product =
+              Map<String, dynamic>.from(_products[index]);
 
           return _buildProductCard(
             context,
-            id: product['id'],
-            image: 'assets/images/ibnsina-pharma-logo.png',
+            id: product['id'] ?? 0,
+            imageUrl: product['imageUrl'],
             name: product['name'] ?? 'Unknown Product',
             price: '${product['price'] ?? 0} EGP',
           );
@@ -304,9 +285,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // =================================
   // CATEGORY CARD
-  // =================================
 
   Widget _buildCategoryCard(
     BuildContext context, {
@@ -374,14 +353,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // =================================
   // PRODUCT CARD
-  // =================================
 
   Widget _buildProductCard(
     BuildContext context, {
     required int id,
-    required String image,
+    required String? imageUrl,
     required String name,
     required String price,
   }) {
@@ -392,14 +369,14 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(
             builder: (context) => ProductDetailsPage(
               productId: id,
-              image: image,
+              image: imageUrl ??
+                  'assets/images/ibnsina-pharma-logo.png',
               name: name,
               price: price,
             ),
           ),
         );
       },
-
       child: Container(
         width: 180,
         padding: const EdgeInsets.all(12),
@@ -412,13 +389,27 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Expanded(
-              child: Image.asset(
-                image,
-                width: double.infinity,
-                fit: BoxFit.contain,
-              ),
+              child: imageUrl != null &&
+                      imageUrl.trim().isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder:
+                          (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/images/ibnsina-pharma-logo.png',
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/images/ibnsina-pharma-logo.png',
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
             ),
 
             const SizedBox(height: 8),
@@ -454,21 +445,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // =================================
-  // BUILD
-  // =================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      // =================================
       // APP BAR
-      // =================================
 
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
-
         actions: [
           IconButton(
             onPressed: () {
@@ -476,51 +460,39 @@ class _HomePageState extends State<HomePage> {
                 _selectedIndex = 2;
               });
             },
-
             icon: const Icon(
               Icons.shopping_cart_outlined,
             ),
-
             tooltip: 'Cart',
           ),
         ],
       ),
 
-      // =================================
       // BODY
-      // =================================
 
       body: _buildSelectedPage(),
 
-      // =================================
       // BOTTOM NAVIGATION
-      // =================================
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-
-        onDestinationSelected:
-            _onBottomNavTapped,
-
+        onDestinationSelected: _onBottomNavTapped,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
             selectedIcon: Icon(Icons.search),
             label: 'Search',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.shopping_cart_outlined),
             selectedIcon: Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),

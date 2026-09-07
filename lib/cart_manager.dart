@@ -3,9 +3,7 @@ import 'cart_item.dart';
 class CartManager {
   static final List<CartItem> items = [];
 
-  // =================================
   // ADD ITEM
-  // =================================
 
   static bool addItem({
     required int productId,
@@ -56,17 +54,13 @@ class CartManager {
     return true;
   }
 
-  // =================================
   // REMOVE ITEM
-  // =================================
 
   static void removeItem(CartItem item) {
     items.remove(item);
   }
 
-  // =================================
   // INCREASE QUANTITY
-  // =================================
 
   static bool increaseQuantity(CartItem item) {
     if (item.quantity >= item.stockQuantity) {
@@ -77,9 +71,7 @@ class CartManager {
     return true;
   }
 
-  // =================================
   // DECREASE QUANTITY
-  // =================================
 
   static void decreaseQuantity(CartItem item) {
     if (item.quantity > 1) {
@@ -87,9 +79,7 @@ class CartManager {
     }
   }
 
-  // =================================
   // TOTAL
-  // =================================
 
   static double get total {
     double total = 0;
@@ -101,9 +91,7 @@ class CartManager {
     return total;
   }
 
-  // =================================
   // CLEAR CART
-  // =================================
 
   static void clearCart() {
     items.clear();

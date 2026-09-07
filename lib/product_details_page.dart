@@ -29,9 +29,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   bool isLoading = true;
   String? errorMessage;
 
-  // =================================
   // LOAD PRODUCT
-  // =================================
 
   @override
   void initState() {
@@ -63,9 +61,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // =================================
   // INCREASE QUANTITY
-  // =================================
 
   void increaseQuantity() {
     final stock =
@@ -86,9 +82,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // =================================
   // DECREASE QUANTITY
-  // =================================
 
   void decreaseQuantity() {
     if (quantity > 1) {
@@ -98,9 +92,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // =================================
   // ADD TO CART
-  // =================================
 
   void addToCart() {
     if (product == null) {
@@ -152,9 +144,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // =================================
   // FORMAT EXPIRY DATE
-  // =================================
 
   String formatExpiryDate(dynamic date) {
     if (date == null) {
@@ -173,10 +163,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
-  // =================================
-  // BUILD
-  // =================================
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,18 +171,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         title: const Text('Product Details'),
       ),
 
-      // =================================
       // LOADING
-      // =================================
 
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(),
             )
 
-          // =================================
           // ERROR
-          // =================================
 
           : errorMessage != null
               ? Center(
@@ -252,9 +235,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                 )
 
-              // =================================
               // PRODUCT DETAILS
-              // =================================
 
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
@@ -263,9 +244,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
-                      // =================================
                       // PRODUCT IMAGE
-                      // =================================
 
                       Container(
                         height: 280,
@@ -279,17 +258,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               BorderRadius.circular(20),
                         ),
 
-                        child: Image.asset(
-                          widget.image,
+                        child: Image.network(
+                          product!['imageUrl'] ?? '',
                           fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              'assets/images/ibnsina-pharma-logo.png',
+                               fit: BoxFit.contain,
+                            );
+                          },
                         ),
                       ),
 
                       const SizedBox(height: 25),
 
-                      // =================================
                       // PRODUCT NAME
-                      // =================================
 
                       Text(
                         product!['name'] ?? widget.name,
@@ -301,9 +284,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 10),
 
-                      // =================================
                       // PRICE
-                      // =================================
 
                       Text(
                         '${product!['price'] ?? 0} EGP',
@@ -321,9 +302,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 25),
 
-                      // =================================
                       // DESCRIPTION
-                      // =================================
 
                       const Text(
                         'Description',
@@ -348,9 +327,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 25),
 
-                      // =================================
                       // CATEGORY
-                      // =================================
 
                       const Text(
                         'Category',
@@ -373,9 +350,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 25),
 
-                      // =================================
                       // STOCK
-                      // =================================
 
                       const Text(
                         'Availability',
@@ -403,9 +378,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 25),
 
-                      // =================================
                       // EXPIRY DATE
-                      // =================================
 
                       const Text(
                         'Expiry Date',
@@ -429,9 +402,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 30),
 
-                      // =================================
                       // QUANTITY
-                      // =================================
 
                       const Text(
                         'Quantity',
@@ -502,9 +473,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                       const SizedBox(height: 30),
 
-                      // =================================
                       // ADD TO CART
-                      // =================================
 
                       SizedBox(
                         width: double.infinity,

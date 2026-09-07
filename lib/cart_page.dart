@@ -11,9 +11,7 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
 
-  // =================================
   // REMOVE ITEM
-  // =================================
 
   void removeItem(CartItem item) {
     setState(() {
@@ -29,9 +27,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // =================================
   // INCREASE QUANTITY
-  // =================================
 
   void increaseQuantity(CartItem item) {
     final success = CartManager.increaseQuantity(item);
@@ -48,9 +44,7 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  // =================================
   // DECREASE QUANTITY
-  // =================================
 
   void decreaseQuantity(CartItem item) {
     setState(() {
@@ -58,9 +52,7 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  // =================================
   // CHECKOUT
-  // =================================
 
   void checkout() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -72,9 +64,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // =================================
-  // BUILD
-  // =================================
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +73,12 @@ class _CartPageState extends State<CartPage> {
     return Column(
       children: [
 
-        // =================================
         // CART CONTENT
-        // =================================
 
         Expanded(
           child: items.isEmpty
 
-              // =================================
               // EMPTY CART
-              // =================================
 
               ? Center(
                   child: Column(
@@ -130,9 +115,7 @@ class _CartPageState extends State<CartPage> {
                   ),
                 )
 
-              // =================================
               // PRODUCTS
-              // =================================
 
               : ListView.builder(
                   padding: const EdgeInsets.all(20),
@@ -157,9 +140,7 @@ class _CartPageState extends State<CartPage> {
 
                           children: [
 
-                            // =================================
                             // PRODUCT IMAGE
-                            // =================================
 
                             Container(
                               width: 85,
@@ -182,9 +163,7 @@ class _CartPageState extends State<CartPage> {
 
                             const SizedBox(width: 15),
 
-                            // =================================
                             // PRODUCT INFO
-                            // =================================
 
                             Expanded(
                               child: Column(
@@ -227,9 +206,7 @@ class _CartPageState extends State<CartPage> {
 
                                   const SizedBox(height: 10),
 
-                                  // =================================
                                   // QUANTITY CONTROLS
-                                  // =================================
 
                                   Row(
                                     children: [
@@ -330,9 +307,7 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
 
-                            // =================================
                             // DELETE
-                            // =================================
 
                             IconButton(
                               onPressed: () {
@@ -352,9 +327,7 @@ class _CartPageState extends State<CartPage> {
                 ),
         ),
 
-        // =================================
         // CHECKOUT SECTION
-        // =================================
 
         if (items.isNotEmpty)
           Container(
@@ -374,9 +347,7 @@ class _CartPageState extends State<CartPage> {
             child: Column(
               children: [
 
-                // =================================
                 // SUBTOTAL
-                // =================================
 
                 Row(
                   mainAxisAlignment:
@@ -406,9 +377,7 @@ class _CartPageState extends State<CartPage> {
 
                 const SizedBox(height: 10),
 
-                // =================================
                 // TOTAL
-                // =================================
 
                 Row(
                   mainAxisAlignment:
@@ -446,9 +415,7 @@ class _CartPageState extends State<CartPage> {
 
                 const SizedBox(height: 18),
 
-                // =================================
                 // CHECKOUT BUTTON
-                // =================================
 
                 SizedBox(
                   width: double.infinity,
