@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cart_manager.dart';
 import 'cart_item.dart';
+import 'api_service.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -10,6 +11,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  bool _isCheckingOut = false;
 
   // REMOVE ITEM
 
@@ -31,9 +33,10 @@ class _CartPageState extends State<CartPage> {
 
   void increaseQuantity(CartItem item) {
     final success = CartManager.increaseQuantity(item);
+
     setState(() {});
 
-    if(!success){
+    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -52,40 +55,152 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  // CHECKOUT
+  // PLACE ORDER
 
-  void checkout() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Checkout will be connected to the Order API next!',
+  Future<void> checkout() async {
+    if (CartManager.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Your cart is empty',
+          ),
         ),
-      ),
-    );
+      );
+      return;
+    }
+
+    setState(() {
+      _isCheckingOut = true;
+    });
+
+    try {
+      // Call the backend Order API
+      final order = await ApiService.placeOrder();
+
+      if (!mounted) return;
+
+      // Get information returned by the backend
+      final orderId = order['id'];
+
+      final totalAmount =
+          order['totalAmount'] ?? CartManager.total;
+
+      // Clear Flutter cart after successful order
+      CartManager.clearCart();
+
+      // Update UI
+      setState(() {});
+
+      // Show success dialog
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            icon: const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 60,
+            ),
+            title: const Text(
+              'Order Placed Successfully!',
+              textAlign: TextAlign.center,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Thank you for your order.',
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 15),
+
+                // ORDER NUMBER
+                if (orderId != null)
+                  Text(
+                    'Order #$orderId',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                const SizedBox(height: 10),
+
+                // TOTAL
+                Text(
+                  'Total: ${double.parse(totalAmount.toString()).toStringAsFixed(2)} EGP',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingOut = false;
+        });
+      }
+    }
   }
 
+  // BUILD
 
   @override
   Widget build(BuildContext context) {
-
     final items = CartManager.items;
 
     return Column(
       children: [
-
+        // =========================
         // CART CONTENT
+        // =========================
 
         Expanded(
           child: items.isEmpty
 
               // EMPTY CART
-
               ? Center(
                   child: Column(
                     mainAxisAlignment:
                         MainAxisAlignment.center,
                     children: [
-
                       Icon(
                         Icons.shopping_cart_outlined,
                         size: 80,
@@ -116,45 +231,33 @@ class _CartPageState extends State<CartPage> {
                 )
 
               // PRODUCTS
-
               : ListView.builder(
                   padding: const EdgeInsets.all(20),
-
                   itemCount: items.length,
-
                   itemBuilder: (context, index) {
-
                     final item = items[index];
 
                     return Card(
                       margin: const EdgeInsets.only(
                         bottom: 15,
                       ),
-
                       child: Padding(
                         padding: const EdgeInsets.all(12),
-
                         child: Row(
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
-
                           children: [
-
                             // PRODUCT IMAGE
-
                             Container(
                               width: 85,
                               height: 85,
-
                               decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .surfaceContainerHighest,
-
                                 borderRadius:
                                     BorderRadius.circular(12),
                               ),
-
                               child: Image.asset(
                                 item.image,
                                 fit: BoxFit.contain,
@@ -164,21 +267,16 @@ class _CartPageState extends State<CartPage> {
                             const SizedBox(width: 15),
 
                             // PRODUCT INFO
-
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
-
                                 children: [
-
                                   Text(
                                     item.name,
-
                                     maxLines: 2,
                                     overflow:
                                         TextOverflow.ellipsis,
-
                                     style: const TextStyle(
                                       fontSize: 17,
                                       fontWeight:
@@ -190,7 +288,6 @@ class _CartPageState extends State<CartPage> {
 
                                   Text(
                                     item.price,
-
                                     style:
                                         const TextStyle(
                                       color: Color.fromARGB(
@@ -207,10 +304,8 @@ class _CartPageState extends State<CartPage> {
                                   const SizedBox(height: 10),
 
                                   // QUANTITY CONTROLS
-
                                   Row(
                                     children: [
-
                                       Container(
                                         decoration:
                                             BoxDecoration(
@@ -223,22 +318,22 @@ class _CartPageState extends State<CartPage> {
                                               BorderRadius
                                                   .circular(8),
                                         ),
-
                                         child: Row(
                                           children: [
-
                                             IconButton(
-                                              onPressed: () {
-                                                decreaseQuantity(
-                                                  item,
-                                                );
-                                              },
-
-                                              icon: const Icon(
+                                              onPressed:
+                                                  _isCheckingOut
+                                                      ? null
+                                                      : () {
+                                                          decreaseQuantity(
+                                                            item,
+                                                          );
+                                                        },
+                                              icon:
+                                                  const Icon(
                                                 Icons.remove,
                                                 size: 18,
                                               ),
-
                                               constraints:
                                                   const BoxConstraints(
                                                 minWidth: 35,
@@ -248,14 +343,11 @@ class _CartPageState extends State<CartPage> {
 
                                             SizedBox(
                                               width: 30,
-
                                               child: Text(
                                                 '${item.quantity}',
-
                                                 textAlign:
                                                     TextAlign
                                                         .center,
-
                                                 style:
                                                     const TextStyle(
                                                   fontWeight:
@@ -266,17 +358,19 @@ class _CartPageState extends State<CartPage> {
                                             ),
 
                                             IconButton(
-                                              onPressed: () {
-                                                increaseQuantity(
-                                                  item,
-                                                );
-                                              },
-
-                                              icon: const Icon(
+                                              onPressed:
+                                                  _isCheckingOut
+                                                      ? null
+                                                      : () {
+                                                          increaseQuantity(
+                                                            item,
+                                                          );
+                                                        },
+                                              icon:
+                                                  const Icon(
                                                 Icons.add,
                                                 size: 18,
                                               ),
-
                                               constraints:
                                                   const BoxConstraints(
                                                 minWidth: 35,
@@ -290,10 +384,8 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(width: 10),
 
                                       // ITEM TOTAL
-
                                       Text(
                                         '${item.totalPrice.toStringAsFixed(2)} EGP',
-
                                         style:
                                             const TextStyle(
                                           fontWeight:
@@ -308,12 +400,12 @@ class _CartPageState extends State<CartPage> {
                             ),
 
                             // DELETE
-
                             IconButton(
-                              onPressed: () {
-                                removeItem(item);
-                              },
-
+                              onPressed: _isCheckingOut
+                                  ? null
+                                  : () {
+                                      removeItem(item);
+                                    },
                               icon: const Icon(
                                 Icons.delete_outline,
                                 color: Colors.red,
@@ -332,40 +424,30 @@ class _CartPageState extends State<CartPage> {
         if (items.isNotEmpty)
           Container(
             padding: const EdgeInsets.all(20),
-
             decoration: BoxDecoration(
               color: Theme.of(context)
                   .colorScheme
                   .surfaceContainerHighest,
-
               borderRadius:
                   const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
             ),
-
             child: Column(
               children: [
-
                 // SUBTOTAL
-
                 Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
-
                   children: [
-
                     const Text(
                       'Subtotal',
-
                       style: TextStyle(
                         fontSize: 16,
                       ),
                     ),
-
                     Text(
                       '${CartManager.total.toStringAsFixed(2)} EGP',
-
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight:
@@ -378,26 +460,20 @@ class _CartPageState extends State<CartPage> {
                 const SizedBox(height: 10),
 
                 // TOTAL
-
                 Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
-
                   children: [
-
                     const Text(
                       'Total',
-
                       style: TextStyle(
                         fontSize: 21,
                         fontWeight:
                             FontWeight.bold,
                       ),
                     ),
-
                     Text(
                       '${CartManager.total.toStringAsFixed(2)} EGP',
-
                       style: const TextStyle(
                         fontSize: 21,
                         color: Color.fromARGB(
@@ -415,23 +491,31 @@ class _CartPageState extends State<CartPage> {
 
                 const SizedBox(height: 18),
 
-                // CHECKOUT BUTTON
-
+                // PLACE ORDER BUTTON
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-
                   child: ElevatedButton.icon(
-                    onPressed: checkout,
-
-                    icon: const Icon(
-                      Icons.shopping_bag_outlined,
-                    ),
-
-                    label: const Text(
-                      'Place Order',
-
-                      style: TextStyle(
+                    onPressed:
+                        _isCheckingOut ? null : checkout,
+                    icon: _isCheckingOut
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.shopping_bag_outlined,
+                          ),
+                    label: Text(
+                      _isCheckingOut
+                          ? 'Placing Order...'
+                          : 'Place Order',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight:
                             FontWeight.bold,

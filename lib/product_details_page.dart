@@ -21,15 +21,20 @@ class ProductDetailsPage extends StatefulWidget {
       _ProductDetailsPageState();
 }
 
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
+class _ProductDetailsPageState
+    extends State<ProductDetailsPage> {
   int quantity = 1;
 
   Map<String, dynamic>? product;
 
   bool isLoading = true;
+  bool isAddingToCart = false;
+
   String? errorMessage;
 
+  // ============================================================
   // LOAD PRODUCT
+  // ============================================================
 
   @override
   void initState() {
@@ -61,7 +66,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
+  // ============================================================
   // INCREASE QUANTITY
+  // ============================================================
 
   void increaseQuantity() {
     final stock =
@@ -82,7 +89,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
+  // ============================================================
   // DECREASE QUANTITY
+  // ============================================================
 
   void decreaseQuantity() {
     if (quantity > 1) {
@@ -92,10 +101,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
+  // ============================================================
   // ADD TO CART
+  // ============================================================
 
-  void addToCart() {
-    if (product == null) {
+  Future<void> addToCart() async {
+    if (product == null || isAddingToCart) {
       return;
     }
 
@@ -114,16 +125,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return;
     }
 
-    final success = CartManager.addItem(
-      productId: widget.productId,
-      image: widget.image,
-      name: product!['name'] ?? widget.name,
-      price: '${product!['price'] ?? 0} EGP',
-      stockQuantity: stock,
-      quantity: quantity,
-    );
-
-    if (!success) {
+    if (quantity > stock) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -135,16 +137,75 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$quantity x ${product!['name'] ?? widget.name} added to cart',
+    setState(() {
+      isAddingToCart = true;
+    });
+
+    try {
+      // --------------------------------------------------------
+      // FIRST: ADD TO BACKEND DATABASE CART
+      // --------------------------------------------------------
+
+      await ApiService.addToCart(
+        widget.productId,
+        quantity,
+      );
+
+      // --------------------------------------------------------
+      // SECOND: UPDATE LOCAL CART
+      // --------------------------------------------------------
+
+      final success = CartManager.addItem(
+        productId: widget.productId,
+        image: widget.image,
+        name: product!['name'] ?? widget.name,
+        price: '${product!['price'] ?? 0} EGP',
+        stockQuantity: stock,
+        quantity: quantity,
+      );
+
+      if (!success) {
+        // The backend was already updated.
+        // This normally shouldn't happen because we check stock
+        // before sending the request.
+        throw Exception(
+          'Could not update the local cart.',
+        );
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$quantity x ${product!['name'] ?? widget.name} '
+            'added to cart',
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final message =
+          e.toString().replaceFirst('Exception: ', '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        isAddingToCart = false;
+      });
+    }
   }
 
+  // ============================================================
   // FORMAT EXPIRY DATE
+  // ============================================================
 
   String formatExpiryDate(dynamic date) {
     if (date == null) {
@@ -163,7 +224,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     }
   }
 
- 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -261,10 +325,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         child: Image.network(
                           product!['imageUrl'] ?? '',
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
+                          errorBuilder:
+                              (context, error, stackTrace) {
                             return Image.asset(
                               'assets/images/ibnsina-pharma-logo.png',
-                               fit: BoxFit.contain,
+                              fit: BoxFit.contain,
                             );
                           },
                         ),
@@ -481,18 +546,31 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                         child: ElevatedButton.icon(
                           onPressed:
-                              (product!['stockQuantity'] ?? 0) > 0
+                              (product!['stockQuantity'] ?? 0) > 0 &&
+                                      !isAddingToCart
                                   ? addToCart
                                   : null,
 
-                          icon: const Icon(
-                            Icons.shopping_cart_outlined,
-                          ),
+                          icon: isAddingToCart
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.shopping_cart_outlined,
+                                ),
 
                           label: Text(
-                            (product!['stockQuantity'] ?? 0) > 0
-                                ? 'Add to Cart'
-                                : 'Out of Stock',
+                            isAddingToCart
+                                ? 'Adding...'
+                                : (product!['stockQuantity'] ?? 0) > 0
+                                    ? 'Add to Cart'
+                                    : 'Out of Stock',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight:

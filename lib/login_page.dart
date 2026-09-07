@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 import 'api_service.dart';
 
@@ -17,10 +18,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Name controller
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameController =
+      TextEditingController();
 
-  // Email and password controllers
   final TextEditingController _emailController =
       TextEditingController();
 
@@ -39,9 +39,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // LOGIN FUNCTION
-
   Future<void> _login() async {
-    // Check if name is empty
+    // Check name
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -51,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // Check if email is empty
+    // Check email
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -85,13 +84,14 @@ class _LoginPageState extends State<LoginPage> {
     if (_passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password must be at least 6 characters'),
+          content: Text(
+            'Password must be at least 6 characters',
+          ),
         ),
       );
       return;
     }
 
-    // Show loading
     setState(() {
       _isLoading = true;
     });
@@ -105,12 +105,46 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // Navigate to Home Page after successful login
-      Navigator.push(
+      // Get JWT token from backend
+      final token = result['token'];
+
+      if (token == null || token.toString().isEmpty) {
+        throw Exception(
+          'Login succeeded but no authentication token was received.',
+        );
+      }
+
+      // Save JWT token locally
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString(
+        'auth_token',
+        token.toString(),
+      );
+
+      // Also save user information
+      await prefs.setInt(
+        'user_id',
+        result['userId'],
+      );
+
+      await prefs.setString(
+        'user_name',
+        result['fullName'] ?? _nameController.text.trim(),
+      );
+
+      await prefs.setString(
+        'user_email',
+        result['email'] ?? _emailController.text.trim(),
+      );
+
+      // Navigate to Home Page
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => HomePage(
-            name: result['fullName'] ?? _nameController.text.trim(),
+            name: result['fullName'] ??
+                _nameController.text.trim(),
           ),
         ),
       );
@@ -120,7 +154,10 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
           ),
         ),
       );
@@ -152,9 +189,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-
                   // DARK / BRIGHT MODE BUTTON
-
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
@@ -177,7 +212,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
 
                   // LOGO
-
                   Image.asset(
                     'assets/images/ibnsina-pharma-logo.png',
                     height: 300,
@@ -200,7 +234,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 10),
 
                   // NAME
-
                   TextFormField(
                     controller: _nameController,
                     keyboardType: TextInputType.name,
@@ -219,7 +252,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
 
                   // EMAIL
-
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -238,7 +270,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
 
                   // PASSWORD
-
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -270,7 +301,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 12),
 
                   // FORGOT PASSWORD
-
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -284,7 +314,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 12),
 
                   // LOGIN BUTTON
-
                   SizedBox(
                     height: 55,
                     child: ElevatedButton(
@@ -307,7 +336,8 @@ class _LoginPageState extends State<LoginPage> {
                           ? const SizedBox(
                               height: 25,
                               width: 25,
-                              child: CircularProgressIndicator(
+                              child:
+                                  CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 3,
                               ),
@@ -325,7 +355,6 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 24),
 
                   // CREATE ACCOUNT
-
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment.center,
