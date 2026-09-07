@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'api_service.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onToggleTheme;
@@ -16,16 +17,19 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
-  // Name controller - required by the task
+  // Name controller
   final TextEditingController _nameController = TextEditingController();
 
-  // Existing controllers
-  final TextEditingController _emailController = TextEditingController();
+  // Email and password controllers
+  final TextEditingController _emailController =
+      TextEditingController();
+
   final TextEditingController _passwordController =
       TextEditingController();
 
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
   late bool _isDarkMode;
 
   @override
@@ -34,8 +38,11 @@ class _LoginPageState extends State<LoginPage> {
     _isDarkMode = widget.isDarkMode;
   }
 
-  // Login function
-  void _login() {
+  // =========================
+  // LOGIN FUNCTION
+  // =========================
+
+  Future<void> _login() async {
     // Check if name is empty
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,8 +53,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // Check email and password validation
-    // We keep your existing requirements.
+    // Check if email is empty
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -57,6 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    // Check email format
     if (!_emailController.text.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -66,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    // Check password
     if (_passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -75,6 +83,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    // Check password length
     if (_passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -84,15 +93,46 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // Navigate to Home Page and pass the user's name
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomePage(
-          name: _nameController.text.trim(),
+    // Show loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Call ASP.NET Core API
+      final result = await ApiService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      // Navigate to Home Page after successful login
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(
+            name: result['fullName'] ?? _nameController.text.trim(),
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -124,19 +164,19 @@ class _LoginPageState extends State<LoginPage> {
                     child: IconButton(
                       onPressed: () {
                         widget.onToggleTheme();
+
                         setState(() {
                           _isDarkMode = !_isDarkMode;
                         });
                       },
-                      icon: Icon (
+                      icon: Icon(
                         _isDarkMode
-                            ?Icons.light_mode
-                            :Icons.dark_mode,
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
                       ),
                       tooltip: _isDarkMode
-                          ?'Switch to bright mode'
-                          :'Switch to dark mode',
-                            
+                          ? 'Switch to bright mode'
+                          : 'Switch to dark mode',
                     ),
                   ),
 
@@ -175,7 +215,9 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       labelText: 'Name',
                       hintText: 'Enter your name',
-                      prefixIcon: const Icon(Icons.person_outline),
+                      prefixIcon: const Icon(
+                        Icons.person_outline,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -194,7 +236,9 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -213,7 +257,9 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -222,7 +268,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscurePassword = !_obscurePassword;
+                            _obscurePassword =
+                                !_obscurePassword;
                           });
                         },
                       ),
@@ -242,7 +289,9 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {},
-                      child: const Text('Forgot Password?'),
+                      child: const Text(
+                        'Forgot Password?',
+                      ),
                     ),
                   ),
 
@@ -255,22 +304,37 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: _login,
+                      onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            const Color.fromARGB(255, 76, 87, 175),
+                            const Color.fromARGB(
+                          255,
+                          76,
+                          87,
+                          175,
+                        ),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 25,
+                              width: 25,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -281,12 +345,17 @@ class _LoginPageState extends State<LoginPage> {
                   // =========================
 
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?"),
+                      const Text(
+                        "Don't have an account?",
+                      ),
                       TextButton(
                         onPressed: () {},
-                        child: const Text('Create Account'),
+                        child: const Text(
+                          'Create Account',
+                        ),
                       ),
                     ],
                   ),

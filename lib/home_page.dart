@@ -3,6 +3,7 @@ import 'search_page.dart';
 import 'cart_page.dart';
 import 'profile_page.dart';
 import 'product_details_page.dart';
+import 'api_service.dart';
 
 class HomePage extends StatefulWidget {
   final String name;
@@ -18,6 +19,45 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+
+  // Products from API
+  List<dynamic> _products = [];
+
+  bool _isLoadingProducts = true;
+  String? _productsError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  // =================================
+  // LOAD PRODUCTS FROM API
+  // =================================
+
+  Future<void> _loadProducts() async {
+    try {
+      final products = await ApiService.getProducts();
+
+      if (!mounted) return;
+
+      setState(() {
+        _products = products;
+        _isLoadingProducts = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingProducts = false;
+        _productsError = e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            );
+      });
+    }
+  }
 
   void _onBottomNavTapped(int index) {
     setState(() {
@@ -165,39 +205,101 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 15),
 
-          SizedBox(
-            height: 250,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _buildProductCard(
-                  context,
-                  image: 'assets/images/ibnsina-pharma-logo.png',
-                  name: 'Paracetamol',
-                  price: '50 EGP',
-                ),
+          _buildProductsSection(),
+        ],
+      ),
+    );
+  }
 
-                const SizedBox(width: 15),
+  // =================================
+  // PRODUCTS SECTION
+  // =================================
 
-                _buildProductCard(
-                  context,
-                  image: 'assets/images/ibnsina-pharma-logo.png',
-                  name: 'Vitamin C',
-                  price: '120 EGP',
-                ),
+  Widget _buildProductsSection() {
+    // Loading
+    if (_isLoadingProducts) {
+      return const SizedBox(
+        height: 250,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-                const SizedBox(width: 15),
+    // Error
+    if (_productsError != null) {
+      return SizedBox(
+        height: 250,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 40,
+              ),
 
-                _buildProductCard(
-                  context,
-                  image: 'assets/images/ibnsina-pharma-logo.png',
-                  name: 'Skin Care',
-                  price: '200 EGP',
-                ),
-              ],
+              const SizedBox(height: 10),
+
+              Text(
+                _productsError!,
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 10),
+
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoadingProducts = true;
+                    _productsError = null;
+                  });
+
+                  _loadProducts();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // No products
+    if (_products.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(
+          child: Text(
+            'No products available',
+            style: TextStyle(
+              fontSize: 16,
             ),
           ),
-        ],
+        ),
+      );
+    }
+
+    // Products
+    return SizedBox(
+      height: 250,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _products.length,
+        separatorBuilder: (context, index) {
+          return const SizedBox(width: 15);
+        },
+        itemBuilder: (context, index) {
+          final product = _products[index];
+
+          return _buildProductCard(
+            context,
+            id: product['id'],
+            image: 'assets/images/ibnsina-pharma-logo.png',
+            name: product['name'] ?? 'Unknown Product',
+            price: '${product['price'] ?? 0} EGP',
+          );
+        },
       ),
     );
   }
@@ -211,36 +313,63 @@ class _HomePageState extends State<HomePage> {
     required IconData icon,
     required String title,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 18,
-        horizontal: 8,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 32,
-            color: Color.fromARGB(255, 76, 92, 175),
-          ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: () {
+        setState(() {
+          _selectedIndex = 1;
+        });
 
-          const SizedBox(height: 8),
-
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(
+                title: const Text('Search Products'),
+              ),
+              body: SearchPage(
+                initialCategory: title,
+              ),
             ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 8,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: const Color.fromARGB(
+                255,
+                76,
+                92,
+                175,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -251,69 +380,79 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildProductCard(
     BuildContext context, {
+    required int id,
     required String image,
     required String name,
     required String price,
   }) {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ProductDetailsPage(
-              image: image, 
-              name: name, 
+              productId: id,
+              image: image,
+              name: name,
               price: price,
-              ),
-           )
-         );
-       },
+            ),
+          ),
+        );
+      },
 
       child: Container(
-      width: 180,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
+        width: 180,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            Expanded(
+              child: Image.asset(
+                image,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(
+              price,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color.fromARGB(
+                  255,
+                  76,
+                  92,
+                  175,
+                ),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Image.asset(
-              image,
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          Text(
-            price,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color.fromARGB(255, 76, 92, 175),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 
   // =================================
   // BUILD
@@ -329,6 +468,7 @@ class _HomePageState extends State<HomePage> {
 
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
+
         actions: [
           IconButton(
             onPressed: () {
@@ -336,9 +476,11 @@ class _HomePageState extends State<HomePage> {
                 _selectedIndex = 2;
               });
             },
+
             icon: const Icon(
               Icons.shopping_cart_outlined,
             ),
+
             tooltip: 'Cart',
           ),
         ],
@@ -357,7 +499,8 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
 
-        onDestinationSelected: _onBottomNavTapped,
+        onDestinationSelected:
+            _onBottomNavTapped,
 
         destinations: const [
           NavigationDestination(
