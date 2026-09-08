@@ -8,9 +8,15 @@ import 'api_service.dart';
 class HomePage extends StatefulWidget {
   final String name;
 
+  // Dark mode
+  final VoidCallback onToggleTheme;
+  final bool isDarkMode;
+
   const HomePage({
     super.key,
     required this.name,
+    required this.onToggleTheme,
+    required this.isDarkMode,
   });
 
   @override
@@ -19,19 +25,31 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  late bool _isDarkMode;
 
+  // PRODUCTS
   List<dynamic> _products = [];
 
   bool _isLoadingProducts = true;
   String? _productsError;
 
+  // CATEGORIES
+  List<dynamic> _categories = [];
+
+  bool _isLoadingCategories = true;
+  String? _categoriesError;
+
   @override
   void initState() {
     super.initState();
+
+    _isDarkMode = widget.isDarkMode;
+
     _loadProducts();
+    _loadCategories();
   }
 
-  // LOAD PRODUCTS FROM API
+  // LOAD PRODUCTS
 
   Future<void> _loadProducts() async {
     try {
@@ -56,6 +74,34 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+
+  // LOAD CATEGORIES
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await ApiService.getCategories();
+
+      if (!mounted) return;
+
+      setState(() {
+        _categories = categories;
+        _isLoadingCategories = false;
+        _categoriesError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingCategories = false;
+        _categoriesError = e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            );
+      });
+    }
+  }
+
+  // BOTTOM NAVIGATION
 
   void _onBottomNavTapped(int index) {
     setState(() {
@@ -83,7 +129,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // HOME PAGE CONTENT
+  // HOME PAGE
 
   Widget _buildHomePage() {
     return SingleChildScrollView(
@@ -91,7 +137,6 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // WELCOME
 
           Text(
@@ -116,17 +161,26 @@ class _HomePageState extends State<HomePage> {
 
           // SEARCH BAR
 
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search medicines...',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: BorderSide.none,
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedIndex = 1;
+              });
+            },
+            child: AbsorbPointer(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search medicines...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
             ),
           ),
@@ -145,37 +199,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 15),
 
-          Row(
-            children: [
-              Expanded(
-                child: _buildCategoryCard(
-                  context,
-                  icon: Icons.medication_outlined,
-                  title: 'Medicine',
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: _buildCategoryCard(
-                  context,
-                  icon: Icons.local_pharmacy_outlined,
-                  title: 'Vitamins',
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: _buildCategoryCard(
-                  context,
-                  icon: Icons.spa_outlined,
-                  title: 'Personal Care',
-                ),
-              ),
-            ],
-          ),
+          _buildCategoriesSection(),
 
           const SizedBox(height: 30),
 
@@ -195,6 +219,202 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  // CATEGORIES SECTION
+
+  Widget _buildCategoriesSection() {
+    if (_isLoadingCategories) {
+      return const SizedBox(
+        height: 120,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_categoriesError != null) {
+      return SizedBox(
+        height: 120,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 35,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _categoriesError!,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoadingCategories = true;
+                    _categoriesError = null;
+                  });
+
+                  _loadCategories();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_categories.isEmpty) {
+      return const SizedBox(
+        height: 100,
+        child: Center(
+          child: Text(
+            'No categories available',
+            style: TextStyle(
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 125,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        separatorBuilder: (context, index) {
+          return const SizedBox(width: 12);
+        },
+        itemBuilder: (context, index) {
+          final category =
+              Map<String, dynamic>.from(_categories[index]);
+
+          final int categoryId =
+              category['id'] ?? 0;
+
+          final String categoryName =
+              category['name'] ?? 'Unknown Category';
+
+          return _buildCategoryCard(
+            context,
+            categoryId: categoryId,
+            title: categoryName,
+          );
+        },
+      ),
+    );
+  }
+
+  // CATEGORY CARD
+
+  Widget _buildCategoryCard(
+    BuildContext context, {
+    required int categoryId,
+    required String title,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(
+                title: Text(title),
+              ),
+              body: SearchPage(
+                initialCategoryId: categoryId,
+                initialCategoryName: title,
+              ),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 125,
+        padding: const EdgeInsets.symmetric(
+          vertical: 15,
+          horizontal: 8,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _getCategoryIcon(title),
+              size: 32,
+              color: const Color.fromARGB(
+                255,
+                76,
+                92,
+                175,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // CATEGORY ICON
+
+  IconData _getCategoryIcon(String categoryName) {
+    final name = categoryName.toLowerCase();
+
+    if (name.contains('medicine') ||
+        name.contains('drug') ||
+        name.contains('pharma')) {
+      return Icons.medication_outlined;
+    }
+
+    if (name.contains('vitamin') ||
+        name.contains('supplement')) {
+      return Icons.health_and_safety_outlined;
+    }
+
+    if (name.contains('personal') ||
+        name.contains('care') ||
+        name.contains('beauty')) {
+      return Icons.spa_outlined;
+    }
+
+    if (name.contains('baby') ||
+        name.contains('child')) {
+      return Icons.child_friendly_outlined;
+    }
+
+    if (name.contains('skin') ||
+        name.contains('derma')) {
+      return Icons.face_retouching_natural;
+    }
+
+    if (name.contains('first aid')) {
+      return Icons.medical_services_outlined;
+    }
+
+    return Icons.local_pharmacy_outlined;
   }
 
   // PRODUCTS SECTION
@@ -281,74 +501,6 @@ class _HomePageState extends State<HomePage> {
             price: '${product['price'] ?? 0} EGP',
           );
         },
-      ),
-    );
-  }
-
-  // CATEGORY CARD
-
-  Widget _buildCategoryCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(15),
-      onTap: () {
-        setState(() {
-          _selectedIndex = 1;
-        });
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(
-                title: const Text('Search Products'),
-              ),
-              body: SearchPage(
-                initialCategory: title,
-              ),
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 8,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: const Color.fromARGB(
-                255,
-                76,
-                92,
-                175,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -445,7 +597,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -454,6 +605,24 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
         actions: [
+          IconButton(
+            onPressed: () {
+              widget.onToggleTheme();
+
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+            icon: Icon(
+              _isDarkMode
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            tooltip: _isDarkMode
+                ? 'Light mode'
+                : 'Dark mode',
+          ),
+
           IconButton(
             onPressed: () {
               setState(() {
@@ -476,7 +645,8 @@ class _HomePageState extends State<HomePage> {
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: _onBottomNavTapped,
+        onDestinationSelected:
+            _onBottomNavTapped,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

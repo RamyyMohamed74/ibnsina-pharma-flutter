@@ -51,8 +51,8 @@ class _WelcomePageState extends State<WelcomePage>
     // Start animation
     _controller.forward();
 
-    // Navigate to Login after 5 seconds
-    Timer(const Duration(seconds: 3), () {
+    // Navigate to Login after 2 seconds
+    Timer(const Duration(seconds: 2), () {
       if (mounted) { //Page still actiev? 
         Navigator.pushReplacement(
           context,

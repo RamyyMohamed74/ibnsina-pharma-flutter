@@ -40,16 +40,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // LOGIN FUNCTION
   Future<void> _login() async {
-    // Check name
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your name'),
-        ),
-      );
-      return;
-    }
-
+    
     // Check email
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,6 +136,8 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context) => HomePage(
             name: result['fullName'] ??
                 _nameController.text.trim(),
+            onToggleTheme: widget.onToggleTheme,
+            isDarkMode: widget.isDarkMode,
           ),
         ),
       );
@@ -233,21 +226,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
 
-                  // NAME
-                  TextFormField(
-                    controller: _nameController,
-                    keyboardType: TextInputType.name,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      hintText: 'Enter your name',
-                      prefixIcon: const Icon(
-                        Icons.person_outline,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                  
 
                   const SizedBox(height: 20),
 

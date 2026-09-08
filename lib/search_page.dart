@@ -3,11 +3,13 @@ import 'product_details_page.dart';
 import 'api_service.dart';
 
 class SearchPage extends StatefulWidget {
-  final String? initialCategory;
+  final int? initialCategoryId;
+  final String? initialCategoryName;
 
   const SearchPage({
     super.key,
-    this.initialCategory,
+    this.initialCategoryId,
+    this.initialCategoryName,
   });
 
   @override
@@ -27,7 +29,6 @@ class _SearchPageState extends State<SearchPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // LOAD PRODUCTS
 
   @override
   void initState() {
@@ -35,6 +36,8 @@ class _SearchPageState extends State<SearchPage> {
 
     _loadProducts();
   }
+
+  // LOAD PRODUCTS
 
   Future<void> _loadProducts() async {
     try {
@@ -53,7 +56,10 @@ class _SearchPageState extends State<SearchPage> {
       setState(() {
         _isLoading = false;
         _errorMessage =
-            e.toString().replaceFirst('Exception: ', '');
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                );
       });
     }
   }
@@ -61,26 +67,54 @@ class _SearchPageState extends State<SearchPage> {
   // FILTER PRODUCTS
 
   List<dynamic> get filteredProducts {
-    if (_searchText.trim().isEmpty) {
-      return products;
-    }
-
     return products.where((product) {
-      final name =
-          (product['name'] ?? '').toString().toLowerCase();
+      final productMap =
+          Map<String, dynamic>.from(product);
 
-      final description =
-          (product['description'] ?? '').toString().toLowerCase();
+      // CATEGORY FILTER
 
-      final search =
-          _searchText.toLowerCase().trim();
+      bool matchesCategory = true;
 
-      return name.contains(search) ||
-          description.contains(search);
+      if (widget.initialCategoryId != null) {
+        final productCategoryId =
+            productMap['categoryId'];
+
+        matchesCategory =
+            productCategoryId != null &&
+            int.tryParse(
+                  productCategoryId.toString(),
+                ) ==
+                widget.initialCategoryId;
+      }
+
+      // TEXT SEARCH
+
+      bool matchesSearch = true;
+
+      if (_searchText.trim().isNotEmpty) {
+        final name =
+            (productMap['name'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        final description =
+            (productMap['description'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        final search =
+            _searchText.toLowerCase().trim();
+
+        matchesSearch =
+            name.contains(search) ||
+            description.contains(search);
+      }
+
+      // PRODUCT MUST MATCH BOTH FILTERS
+
+      return matchesCategory && matchesSearch;
     }).toList();
   }
-
-  // DISPOSE
 
   @override
   void dispose() {
@@ -94,7 +128,8 @@ class _SearchPageState extends State<SearchPage> {
     BuildContext context,
     Map<String, dynamic> product,
   ) {
-    final int productId = product['id'] ?? 0;
+    final int productId =
+        product['id'] ?? 0;
 
     final String productName =
         product['name'] ?? 'Unknown Product';
@@ -102,15 +137,21 @@ class _SearchPageState extends State<SearchPage> {
     final String productPrice =
         '${product['price'] ?? 0} EGP';
 
+    final String? imageUrl =
+        product['imageUrl'];
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailsPage(
+            builder: (context) =>
+                ProductDetailsPage(
               productId: productId,
-              image:
-                  'assets/images/ibnsina-pharma-logo.png',
+              image: imageUrl != null &&
+                      imageUrl.trim().isNotEmpty
+                  ? imageUrl
+                  : 'assets/images/ibnsina-pharma-logo.png',
               name: productName,
               price: productPrice,
             ),
@@ -118,7 +159,9 @@ class _SearchPageState extends State<SearchPage> {
         );
       },
       child: Card(
-        margin: const EdgeInsets.only(bottom: 15),
+        margin: const EdgeInsets.only(
+          bottom: 15,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -135,16 +178,25 @@ class _SearchPageState extends State<SearchPage> {
                   borderRadius:
                       BorderRadius.circular(12),
                 ),
-                child: Image.network (
-                  product['imageurrl']?? '',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(
-                      'assets/images/ibnsina-pharma-logo.png',
-                      fit: BoxFit.contain,
-                    );
-                  },
-                ),
+                child: imageUrl != null &&
+                        imageUrl.trim().isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder:
+                            (context,
+                                error,
+                                stackTrace) {
+                          return Image.asset(
+                            'assets/images/ibnsina-pharma-logo.png',
+                            fit: BoxFit.contain,
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        'assets/images/ibnsina-pharma-logo.png',
+                        fit: BoxFit.contain,
+                      ),
               ),
 
               const SizedBox(width: 15),
@@ -158,7 +210,8 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Text(
                       productName,
-                      style: const TextStyle(
+                      style:
+                          const TextStyle(
                         fontSize: 18,
                         fontWeight:
                             FontWeight.bold,
@@ -169,7 +222,8 @@ class _SearchPageState extends State<SearchPage> {
 
                     Text(
                       productPrice,
-                      style: const TextStyle(
+                      style:
+                          const TextStyle(
                         fontSize: 16,
                         color: Color.fromARGB(
                           255,
@@ -182,15 +236,16 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ),
 
-                    // STOCK
-
                     const SizedBox(height: 5),
+
+                    // STOCK
 
                     Text(
                       'Stock: ${product['stockQuantity'] ?? 0}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade600,
+                        color:
+                            Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -208,10 +263,13 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  
+ 
   @override
   Widget build(BuildContext context) {
     final results = filteredProducts;
+
+    final bool isCategorySearch =
+        widget.initialCategoryId != null;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -219,12 +277,14 @@ class _SearchPageState extends State<SearchPage> {
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-
           // TITLE
 
-          const Text(
-            'Search Products',
-            style: TextStyle(
+          Text(
+            isCategorySearch &&
+                    widget.initialCategoryName != null
+                ? widget.initialCategoryName!
+                : 'Search Products',
+            style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.bold,
             ),
@@ -242,14 +302,17 @@ class _SearchPageState extends State<SearchPage> {
               });
             },
             decoration: InputDecoration(
-              hintText: 'Search medicines...',
+              hintText: isCategorySearch
+                  ? 'Search in this category...'
+                  : 'Search medicines...',
               prefixIcon:
                   const Icon(Icons.search),
               suffixIcon:
                   _searchText.isNotEmpty
                       ? IconButton(
                           onPressed: () {
-                            _searchController.clear();
+                            _searchController
+                                .clear();
 
                             setState(() {
                               _searchText = '';
@@ -272,9 +335,11 @@ class _SearchPageState extends State<SearchPage> {
           // RESULTS TITLE
 
           Text(
-            _searchText.isEmpty
-                ? 'All Products'
-                : 'Search Results',
+            isCategorySearch
+                ? 'Products in ${widget.initialCategoryName}'
+                : _searchText.isEmpty
+                    ? 'All Products'
+                    : 'Search Results',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -295,7 +360,8 @@ class _SearchPageState extends State<SearchPage> {
                     ? Center(
                         child: Column(
                           mainAxisAlignment:
-                              MainAxisAlignment.center,
+                              MainAxisAlignment
+                                  .center,
                           children: [
                             const Icon(
                               Icons.error_outline,
@@ -303,68 +369,91 @@ class _SearchPageState extends State<SearchPage> {
                               color: Colors.red,
                             ),
 
-                            const SizedBox(height: 15),
+                            const SizedBox(
+                              height: 15,
+                            ),
 
                             const Text(
                               'Failed to load products',
-                              style: TextStyle(
+                              style:
+                                  TextStyle(
                                 fontSize: 18,
                                 fontWeight:
-                                    FontWeight.bold,
+                                    FontWeight
+                                        .bold,
                               ),
                             ),
 
-                            const SizedBox(height: 8),
+                            const SizedBox(
+                              height: 8,
+                            ),
 
                             Text(
                               _errorMessage!,
                               textAlign:
                                   TextAlign.center,
-                              style: const TextStyle(
+                              style:
+                                  const TextStyle(
                                 color: Colors.grey,
                               ),
                             ),
 
-                            const SizedBox(height: 15),
+                            const SizedBox(
+                              height: 15,
+                            ),
 
                             ElevatedButton(
                               onPressed:
                                   _loadProducts,
                               child:
-                                  const Text('Retry'),
+                                  const Text(
+                                'Retry',
+                              ),
                             ),
                           ],
                         ),
                       )
                     : results.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Column(
                               mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                                  MainAxisAlignment
+                                      .center,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.search_off,
                                   size: 60,
-                                  color: Colors.grey,
+                                  color:
+                                      Colors.grey,
                                 ),
 
-                                SizedBox(height: 15),
+                                const SizedBox(
+                                  height: 15,
+                                ),
 
-                                Text(
+                                const Text(
                                   'No products found',
-                                  style: TextStyle(
+                                  style:
+                                      TextStyle(
                                     fontSize: 18,
                                     fontWeight:
-                                        FontWeight.bold,
+                                        FontWeight
+                                            .bold,
                                   ),
                                 ),
 
-                                SizedBox(height: 5),
+                                const SizedBox(
+                                  height: 5,
+                                ),
 
                                 Text(
-                                  'Try another search',
-                                  style: TextStyle(
-                                    color: Colors.grey,
+                                  isCategorySearch
+                                      ? 'No products in this category'
+                                      : 'Try another search',
+                                  style:
+                                      const TextStyle(
+                                    color:
+                                        Colors.grey,
                                   ),
                                 ),
                               ],
@@ -377,7 +466,8 @@ class _SearchPageState extends State<SearchPage> {
                                 (context, index) {
                               return _buildProductCard(
                                 context,
-                                Map<String, dynamic>.from(
+                                Map<String,
+                                    dynamic>.from(
                                   results[index],
                                 ),
                               );

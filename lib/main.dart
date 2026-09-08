@@ -30,7 +30,7 @@ class _IbnSinaPharmaAppState extends State<IbnSinaPharmaApp> {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
+          seedColor: const Color.fromARGB(255, 76, 175, 172),
           brightness: Brightness.light,
         ),
       ),
@@ -38,7 +38,7 @@ class _IbnSinaPharmaAppState extends State<IbnSinaPharmaApp> {
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor : Colors.green, 
+          seedColor : const Color.fromARGB(255, 76, 175, 167), 
           brightness: Brightness.dark,
           ),
       ),
