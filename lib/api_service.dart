@@ -27,9 +27,7 @@ class ApiService {
     };
   }
 
-  // ============================================================
   // LOGIN
-  // ============================================================
 
   static Future<Map<String, dynamic>> login(
     String email,
@@ -51,18 +49,41 @@ class ApiService {
     }
 
     if (response.statusCode == 401) {
-      throw Exception('Invalid email or password');
+      throw Exception(
+        'Invalid email or password',
+      );
     }
 
     throw Exception(
       'Login failed. Status code: ${response.statusCode}',
     );
   }
+  
+  //Logout
+ static Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
 
-  // ============================================================
+  await prefs.remove('auth_token');
+}
   // PRODUCTS
-  // ============================================================
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // GET ALL PRODUCTS
   static Future<List<dynamic>> getProducts() async {
     final response = await http.get(
       Uri.parse('$baseUrl/Products'),
@@ -76,10 +97,12 @@ class ApiService {
     }
 
     throw Exception(
-      'Failed to load products. Status code: ${response.statusCode}',
+      'Failed to load products. '
+      'Status code: ${response.statusCode}',
     );
   }
 
+  // GET PRODUCT BY ID
   static Future<Map<String, dynamic>> getProductById(
     int id,
   ) async {
@@ -95,18 +118,20 @@ class ApiService {
     }
 
     if (response.statusCode == 404) {
-      throw Exception('Product not found');
+      throw Exception(
+        'Product not found',
+      );
     }
 
     throw Exception(
-      'Failed to load product. Status code: ${response.statusCode}',
+      'Failed to load product. '
+      'Status code: ${response.statusCode}',
     );
   }
 
-  
   // CATEGORIES
-  
 
+  // GET ALL CATEGORIES
   static Future<List<dynamic>> getCategories() async {
     final response = await http.get(
       Uri.parse('$baseUrl/Categories'),
@@ -120,10 +145,12 @@ class ApiService {
     }
 
     throw Exception(
-      'Failed to load categories. Status code: ${response.statusCode}',
+      'Failed to load categories. '
+      'Status code: ${response.statusCode}',
     );
   }
 
+  // GET CATEGORY BY ID
   static Future<Map<String, dynamic>> getCategoryById(
     int id,
   ) async {
@@ -139,15 +166,17 @@ class ApiService {
     }
 
     if (response.statusCode == 404) {
-      throw Exception('Category not found');
+      throw Exception(
+        'Category not found',
+      );
     }
 
     throw Exception(
-      'Failed to load category. Status code: ${response.statusCode}',
+      'Failed to load category. '
+      'Status code: ${response.statusCode}',
     );
   }
 
-  
   // CART
 
   // ADD TO CART
@@ -178,16 +207,20 @@ class ApiService {
 
     if (response.statusCode == 400 ||
         response.statusCode == 404) {
-      String message = 'Could not add product to cart.';
+      String message =
+          'Could not add product to cart.';
 
       try {
-        final body = jsonDecode(response.body);
+        final body = jsonDecode(
+          response.body,
+        );
 
         if (body is String) {
           message = body;
         } else if (body is Map &&
             body['message'] != null) {
-          message = body['message'].toString();
+          message =
+              body['message'].toString();
         }
       } catch (_) {}
 
@@ -252,16 +285,20 @@ class ApiService {
 
     if (response.statusCode == 400 ||
         response.statusCode == 404) {
-      String message = 'Could not update cart item.';
+      String message =
+          'Could not update cart item.';
 
       try {
-        final body = jsonDecode(response.body);
+        final body = jsonDecode(
+          response.body,
+        );
 
         if (body is String) {
           message = body;
         } else if (body is Map &&
             body['message'] != null) {
-          message = body['message'].toString();
+          message =
+              body['message'].toString();
         }
       } catch (_) {}
 
@@ -296,7 +333,9 @@ class ApiService {
     }
 
     if (response.statusCode == 404) {
-      throw Exception('Cart item not found.');
+      throw Exception(
+        'Cart item not found.',
+      );
     }
 
     throw Exception(
@@ -305,7 +344,6 @@ class ApiService {
     );
   }
 
-  
   // ORDERS
 
   // PLACE ORDER
@@ -332,13 +370,16 @@ class ApiService {
           'Order could not be completed.';
 
       try {
-        final body = jsonDecode(response.body);
+        final body = jsonDecode(
+          response.body,
+        );
 
         if (body is String) {
           message = body;
         } else if (body is Map &&
             body['message'] != null) {
-          message = body['message'].toString();
+          message =
+              body['message'].toString();
         }
       } catch (_) {}
 
@@ -351,7 +392,8 @@ class ApiService {
     );
   }
 
-  // GET ORDERS
+  // GET ALL ORDERS
+
   static Future<List<dynamic>> getOrders() async {
     final headers = await _authHeaders();
 
@@ -377,6 +419,7 @@ class ApiService {
   }
 
   // GET ORDER BY ID
+
   static Future<Map<String, dynamic>> getOrderById(
     int id,
   ) async {
@@ -387,22 +430,62 @@ class ApiService {
       headers: headers,
     );
 
+    // SUCCESS
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+
+      throw Exception(
+        'Invalid order response from server.',
+      );
     }
 
+    // NOT LOGGED IN
     if (response.statusCode == 401) {
       throw Exception(
         'You are not logged in. Please login again.',
       );
     }
 
+    // ORDER NOT FOUND
     if (response.statusCode == 404) {
-      throw Exception('Order not found');
+      throw Exception(
+        'Order #$id was not found.',
+      );
     }
 
+    // BAD REQUEST
+    if (response.statusCode == 400) {
+      String message =
+          'Could not load order details.';
+
+      try {
+        final body = jsonDecode(
+          response.body,
+        );
+
+        if (body is String) {
+          message = body;
+        } else if (body is Map) {
+          if (body['message'] != null) {
+            message =
+                body['message'].toString();
+          } else if (body['error'] != null) {
+            message =
+                body['error'].toString();
+          }
+        }
+      } catch (_) {}
+
+      throw Exception(message);
+    }
+
+    // OTHER ERRORS
     throw Exception(
-      'Failed to load order. '
+      'Failed to load order details. '
       'Status code: ${response.statusCode}',
     );
   }

@@ -3,10 +3,12 @@ import 'orders_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final String name;
+  final VoidCallback onLogout;
 
   const ProfilePage({
     super.key,
     required this.name,
+    required this.onLogout,
   });
 
   @override
@@ -27,7 +29,6 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 30),
 
           // PROFILE INFORMATION
-
           ListTile(
             leading: const CircleAvatar(
               child: Icon(Icons.person),
@@ -46,7 +47,6 @@ class ProfilePage extends StatelessWidget {
           const SizedBox(height: 5),
 
           // MY ORDERS
-
           ListTile(
             leading: const Icon(
               Icons.receipt_long,
@@ -62,15 +62,13 @@ class ProfilePage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      const OrdersPage(),
+                  builder: (context) => const OrdersPage(),
                 ),
               );
             },
           ),
 
           // MY ADDRESSES
-
           ListTile(
             leading: const Icon(
               Icons.location_on_outlined,
@@ -86,7 +84,6 @@ class ProfilePage extends StatelessWidget {
           ),
 
           // SETTINGS
-
           ListTile(
             leading: const Icon(
               Icons.settings_outlined,
@@ -100,9 +97,47 @@ class ProfilePage extends StatelessWidget {
             ),
             onTap: () {},
           ),
+
+          const SizedBox(height: 130),
+
+          // LOGOUT BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text(
+                        'Are you sure you want to logout?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onLogout();
+                          },
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+            ),
+          ),
         ],
       ),
     );
   }
 }
-

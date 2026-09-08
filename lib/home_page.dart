@@ -4,6 +4,7 @@ import 'cart_page.dart';
 import 'profile_page.dart';
 import 'product_details_page.dart';
 import 'api_service.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   final String name;
@@ -101,6 +102,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _logout() async {
+  await ApiService.logout();
+
+  if (!mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (context) => LoginPage(
+        onToggleTheme: widget.onToggleTheme,
+        isDarkMode: widget.isDarkMode,
+      ),
+    ),
+    (route) => false,
+  );
+}
+
   // BOTTOM NAVIGATION
 
   void _onBottomNavTapped(int index) {
@@ -122,6 +140,7 @@ class _HomePageState extends State<HomePage> {
       case 3:
         return ProfilePage(
           name: widget.name,
+          onLogout: _logout,
         );
 
       default:
@@ -309,72 +328,132 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // CATEGORY CARD
+  // CATEGORY CARD WITH HOVER ANIMATION
 
   Widget _buildCategoryCard(
     BuildContext context, {
     required int categoryId,
     required String title,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(15),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(
-                title: Text(title),
+    bool isHovered = false;
+
+    return StatefulBuilder(
+      builder: (context, setHoverState) {
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+
+          onEnter: (_) {
+            setHoverState(() {
+              isHovered = true;
+            });
+          },
+
+          onExit: (_) {
+            setHoverState(() {
+              isHovered = false;
+            });
+          },
+
+          child: AnimatedScale(
+            scale: isHovered ? 1.05 : 1.0,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+
+              transform: Matrix4.translationValues(
+                0,
+                isHovered ? -4 : 0,
+                0,
               ),
-              body: SearchPage(
-                initialCategoryId: categoryId,
-                initialCategoryName: title,
+
+              child: InkWell(
+                borderRadius: BorderRadius.circular(15),
+
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(
+                          title: Text(title),
+                        ),
+                        body: SearchPage(
+                          initialCategoryId: categoryId,
+                          initialCategoryName: title,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+
+                child: Container(
+                  width: 125,
+
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 8,
+                  ),
+
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+
+                    borderRadius: BorderRadius.circular(15),
+
+                    boxShadow: isHovered
+                        ? [
+                            BoxShadow(
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 5),
+                              color:
+                                  Colors.black.withOpacity(0.15),
+                            ),
+                          ]
+                        : [],
+                  ),
+
+                  child: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
+
+                    children: [
+                      Icon(
+                        _getCategoryIcon(title),
+                        size: 32,
+                        color: const Color.fromARGB(
+                          255,
+                          76,
+                          92,
+                          175,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         );
       },
-      child: Container(
-        width: 125,
-        padding: const EdgeInsets.symmetric(
-          vertical: 15,
-          horizontal: 8,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getCategoryIcon(title),
-              size: 32,
-              color: const Color.fromARGB(
-                255,
-                76,
-                92,
-                175,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -382,10 +461,9 @@ class _HomePageState extends State<HomePage> {
 
   IconData _getCategoryIcon(String categoryName) {
     final name = categoryName.toLowerCase();
-
     if (name.contains('medicine') ||
         name.contains('drug') ||
-        name.contains('pharma')) {
+        name.contains('anti-biotic')) {
       return Icons.medication_outlined;
     }
 
@@ -400,9 +478,9 @@ class _HomePageState extends State<HomePage> {
       return Icons.spa_outlined;
     }
 
-    if (name.contains('baby') ||
+    if (name.contains('tooth') ||
         name.contains('child')) {
-      return Icons.child_friendly_outlined;
+      return Icons.brush_outlined;
     }
 
     if (name.contains('skin') ||
@@ -505,7 +583,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // PRODUCT CARD
+  // PRODUCT CARD WITH HOVER ANIMATION
 
   Widget _buildProductCard(
     BuildContext context, {
@@ -514,88 +592,152 @@ class _HomePageState extends State<HomePage> {
     required String name,
     required String price,
   }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailsPage(
-              productId: id,
-              image: imageUrl ??
-                  'assets/images/ibnsina-pharma-logo.png',
-              name: name,
-              price: price,
+    bool isHovered = false;
+
+    return StatefulBuilder(
+      builder: (context, setHoverState) {
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+
+          onEnter: (_) {
+            setHoverState(() {
+              isHovered = true;
+            });
+          },
+
+          onExit: (_) {
+            setHoverState(() {
+              isHovered = false;
+            });
+          },
+
+          child: AnimatedScale(
+            scale: isHovered ? 1.03 : 1.0,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+
+              transform: Matrix4.translationValues(
+                0,
+                isHovered ? -5 : 0,
+                0,
+              ),
+
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailsPage(
+                        productId: id,
+                        image: imageUrl ??
+                            'assets/images/ibnsina-pharma-logo.png',
+                        name: name,
+                        price: price,
+                      ),
+                    ),
+                  );
+                },
+
+                child: Container(
+                  width: 180,
+
+                  padding: const EdgeInsets.all(12),
+
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+
+                    borderRadius: BorderRadius.circular(18),
+
+                    boxShadow: isHovered
+                        ? [
+                            BoxShadow(
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 6),
+                              color:
+                                  Colors.black.withOpacity(0.15),
+                            ),
+                          ]
+                        : [],
+                  ),
+
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+
+                    children: [
+                      Expanded(
+                        child: imageUrl != null &&
+                                imageUrl.trim().isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+
+                                errorBuilder:
+                                    (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/ibnsina-pharma-logo.png',
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'assets/images/ibnsina-pharma-logo.png',
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      Text(
+                        price,
+
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(
+                            255,
+                            76,
+                            92,
+                            175,
+                          ),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         );
       },
-      child: Container(
-        width: 180,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: imageUrl != null &&
-                      imageUrl.trim().isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      errorBuilder:
-                          (context, error, stackTrace) {
-                        return Image.asset(
-                          'assets/images/ibnsina-pharma-logo.png',
-                          width: double.infinity,
-                          fit: BoxFit.contain,
-                        );
-                      },
-                    )
-                  : Image.asset(
-                      'assets/images/ibnsina-pharma-logo.png',
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                    ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              price,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(
-                  255,
-                  76,
-                  92,
-                  175,
-                ),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
+
+  // BUILD
 
   @override
   Widget build(BuildContext context) {
@@ -604,7 +746,10 @@ class _HomePageState extends State<HomePage> {
 
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
+
         actions: [
+          // DARK / LIGHT MODE
+
           IconButton(
             onPressed: () {
               widget.onToggleTheme();
@@ -613,15 +758,19 @@ class _HomePageState extends State<HomePage> {
                 _isDarkMode = !_isDarkMode;
               });
             },
+
             icon: Icon(
               _isDarkMode
                   ? Icons.light_mode
                   : Icons.dark_mode,
             ),
+
             tooltip: _isDarkMode
                 ? 'Light mode'
                 : 'Dark mode',
           ),
+
+          // CART
 
           IconButton(
             onPressed: () {
@@ -629,9 +778,11 @@ class _HomePageState extends State<HomePage> {
                 _selectedIndex = 2;
               });
             },
+
             icon: const Icon(
               Icons.shopping_cart_outlined,
             ),
+
             tooltip: 'Cart',
           ),
         ],
@@ -645,27 +796,48 @@ class _HomePageState extends State<HomePage> {
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
+
         onDestinationSelected:
             _onBottomNavTapped,
+
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(
+              Icons.home_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.home,
+            ),
             label: 'Home',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
+            icon: Icon(
+              Icons.search_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.search,
+            ),
             label: 'Search',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart),
+            icon: Icon(
+              Icons.shopping_cart_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.shopping_cart,
+            ),
             label: 'Cart',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person_outline,
+            ),
+            selectedIcon: Icon(
+              Icons.person,
+            ),
             label: 'Profile',
           ),
         ],

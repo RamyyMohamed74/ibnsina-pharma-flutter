@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'order_details_page.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -14,9 +15,7 @@ class _OrdersPageState extends State<OrdersPage> {
   bool isLoading = true;
   String? errorMessage;
 
-  // ============================================================
   // LOAD ORDERS
-  // ============================================================
 
   @override
   void initState() {
@@ -53,9 +52,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
-  // ============================================================
   // FORMAT DATE
-  // ============================================================
 
   String formatDate(dynamic date) {
     if (date == null) {
@@ -74,9 +71,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
-  // ============================================================
   // FORMAT TIME
-  // ============================================================
 
   String formatTime(dynamic date) {
     if (date == null) {
@@ -88,6 +83,7 @@ class _OrdersPageState extends State<OrdersPage> {
           DateTime.parse(date.toString()).toLocal();
 
       final hour = parsedDate.hour;
+
       final minute =
           parsedDate.minute.toString().padLeft(2, '0');
 
@@ -102,9 +98,7 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
-  // ============================================================
   // GET ITEM COUNT
-  // ============================================================
 
   int getItemCount(dynamic order) {
     final items = order['items'];
@@ -126,9 +120,7 @@ class _OrdersPageState extends State<OrdersPage> {
     return count;
   }
 
-  // ============================================================
   // BUILD ORDER CARD
-  // ============================================================
 
   Widget buildOrderCard(
     BuildContext context,
@@ -158,9 +150,7 @@ class _OrdersPageState extends State<OrdersPage> {
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            // --------------------------------------------------
             // ORDER NUMBER
-            // --------------------------------------------------
 
             Row(
               mainAxisAlignment:
@@ -200,7 +190,6 @@ class _OrdersPageState extends State<OrdersPage> {
                             color: Colors.grey,
                           ),
                         ),
-
                         Text(
                           '#$orderId',
                           style: const TextStyle(
@@ -214,13 +203,16 @@ class _OrdersPageState extends State<OrdersPage> {
                   ],
                 ),
 
+                // STATUS
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding:
+                      const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green
+                        .withOpacity(0.1),
                     borderRadius:
                         BorderRadius.circular(20),
                   ),
@@ -242,9 +234,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
             const SizedBox(height: 12),
 
-            // --------------------------------------------------
             // DATE
-            // --------------------------------------------------
 
             Row(
               children: [
@@ -284,9 +274,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
             const SizedBox(height: 12),
 
-            // --------------------------------------------------
             // ITEMS
-            // --------------------------------------------------
 
             Row(
               children: [
@@ -310,9 +298,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
             const SizedBox(height: 15),
 
-            // --------------------------------------------------
             // TOTAL
-            // --------------------------------------------------
 
             Row(
               mainAxisAlignment:
@@ -341,20 +327,19 @@ class _OrdersPageState extends State<OrdersPage> {
 
             const SizedBox(height: 15),
 
-            // --------------------------------------------------
-            // VIEW DETAILS BUTTON
-            // --------------------------------------------------
+            // VIEW DETAILS
 
             SizedBox(
               width: double.infinity,
               height: 45,
               child: OutlinedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Order details coming next!',
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          OrderDetailsPage(
+                        orderId: orderId,
                       ),
                     ),
                   );
@@ -370,9 +355,7 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  // ============================================================
   // BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -389,9 +372,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 child: CircularProgressIndicator(),
               )
 
-            // --------------------------------------------------
             // ERROR
-            // --------------------------------------------------
 
             : errorMessage != null
                 ? ListView(
@@ -453,9 +434,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     ],
                   )
 
-                // --------------------------------------------------
                 // EMPTY ORDERS
-                // --------------------------------------------------
 
                 : orders.isEmpty
                     ? ListView(
@@ -513,9 +492,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         ],
                       )
 
-                    // --------------------------------------------------
                     // ORDERS LIST
-                    // --------------------------------------------------
 
                     : ListView.builder(
                         physics:
@@ -535,4 +512,3 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 }
-

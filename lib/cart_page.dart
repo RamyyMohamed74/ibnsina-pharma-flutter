@@ -188,7 +188,6 @@ class _CartPageState extends State<CartPage> {
 
     return Column(
       children: [
-        // =========================
         // CART CONTENT
         // =========================
 
@@ -248,6 +247,7 @@ class _CartPageState extends State<CartPage> {
                               CrossAxisAlignment.start,
                           children: [
                             // PRODUCT IMAGE
+
                             Container(
                               width: 85,
                               height: 85,
@@ -258,15 +258,49 @@ class _CartPageState extends State<CartPage> {
                                 borderRadius:
                                     BorderRadius.circular(12),
                               ),
-                              child: Image.asset(
-                                item.image,
-                                fit: BoxFit.contain,
-                              ),
+
+                              // FIX:
+                              // Use Image.network for API URLs
+                              // and Image.asset for local assets.
+                              child: item.image.startsWith('http')
+                                  ? Image.network(
+                                      item.image,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                        return const Icon(
+                                          Icons
+                                              .image_not_supported,
+                                          size: 40,
+                                        );
+                                      },
+                                    )
+                                  : Image.asset(
+                                      item.image,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                        return const Icon(
+                                          Icons
+                                              .image_not_supported,
+                                          size: 40,
+                                        );
+                                      },
+                                    ),
                             ),
 
                             const SizedBox(width: 15),
 
                             // PRODUCT INFO
+
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
@@ -304,6 +338,7 @@ class _CartPageState extends State<CartPage> {
                                   const SizedBox(height: 10),
 
                                   // QUANTITY CONTROLS
+
                                   Row(
                                     children: [
                                       Container(
@@ -400,6 +435,7 @@ class _CartPageState extends State<CartPage> {
                             ),
 
                             // DELETE
+
                             IconButton(
                               onPressed: _isCheckingOut
                                   ? null

@@ -32,9 +32,7 @@ class _ProductDetailsPageState
 
   String? errorMessage;
 
-  // ============================================================
   // LOAD PRODUCT
-  // ============================================================
 
   @override
   void initState() {
@@ -66,9 +64,7 @@ class _ProductDetailsPageState
     }
   }
 
-  // ============================================================
   // INCREASE QUANTITY
-  // ============================================================
 
   void increaseQuantity() {
     final stock =
@@ -89,9 +85,7 @@ class _ProductDetailsPageState
     }
   }
 
-  // ============================================================
   // DECREASE QUANTITY
-  // ============================================================
 
   void decreaseQuantity() {
     if (quantity > 1) {
@@ -101,9 +95,7 @@ class _ProductDetailsPageState
     }
   }
 
-  // ============================================================
   // ADD TO CART
-  // ============================================================
 
   Future<void> addToCart() async {
     if (product == null || isAddingToCart) {
@@ -142,18 +134,14 @@ class _ProductDetailsPageState
     });
 
     try {
-      // --------------------------------------------------------
-      // FIRST: ADD TO BACKEND DATABASE CART
-      // --------------------------------------------------------
+      //  ADD TO BACKEND DATABASE CART
 
       await ApiService.addToCart(
         widget.productId,
         quantity,
       );
 
-      // --------------------------------------------------------
-      // SECOND: UPDATE LOCAL CART
-      // --------------------------------------------------------
+      //  UPDATE LOCAL CART
 
       final success = CartManager.addItem(
         productId: widget.productId,
@@ -203,9 +191,7 @@ class _ProductDetailsPageState
     }
   }
 
-  // ============================================================
   // FORMAT EXPIRY DATE
-  // ============================================================
 
   String formatExpiryDate(dynamic date) {
     if (date == null) {
@@ -224,9 +210,6 @@ class _ProductDetailsPageState
     }
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
