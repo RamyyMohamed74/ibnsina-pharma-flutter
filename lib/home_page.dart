@@ -102,28 +102,41 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // LOGOUT
+
   Future<void> _logout() async {
-  await ApiService.logout();
+    await ApiService.logout();
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(
-      builder: (context) => LoginPage(
-        onToggleTheme: widget.onToggleTheme,
-        isDarkMode: widget.isDarkMode,
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginPage(
+          onToggleTheme: widget.onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+        ),
       ),
-    ),
-    (route) => false,
-  );
-}
+      (route) => false,
+    );
+  }
 
   // BOTTOM NAVIGATION
 
   void _onBottomNavTapped(int index) {
     setState(() {
       _selectedIndex = index;
+    });
+  }
+
+  // ORDER COMPLETED
+  //
+  // This is called by CartPage after a successful order.
+  // It changes the selected tab back to Home.
+
+  void _onOrderCompleted() {
+    setState(() {
+      _selectedIndex = 0;
     });
   }
 
@@ -135,7 +148,9 @@ class _HomePageState extends State<HomePage> {
         return const SearchPage();
 
       case 2:
-        return const CartPage();
+        return CartPage(
+          onOrderCompleted: _onOrderCompleted,
+        );
 
       case 3:
         return ProfilePage(
@@ -312,8 +327,7 @@ class _HomePageState extends State<HomePage> {
           final category =
               Map<String, dynamic>.from(_categories[index]);
 
-          final int categoryId =
-              category['id'] ?? 0;
+          final int categoryId = category['id'] ?? 0;
 
           final String categoryName =
               category['name'] ?? 'Unknown Category';
@@ -341,37 +355,30 @@ class _HomePageState extends State<HomePage> {
       builder: (context, setHoverState) {
         return MouseRegion(
           cursor: SystemMouseCursors.click,
-
           onEnter: (_) {
             setHoverState(() {
               isHovered = true;
             });
           },
-
           onExit: (_) {
             setHoverState(() {
               isHovered = false;
             });
           },
-
           child: AnimatedScale(
             scale: isHovered ? 1.05 : 1.0,
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
-
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOut,
-
               transform: Matrix4.translationValues(
                 0,
                 isHovered ? -4 : 0,
                 0,
               ),
-
               child: InkWell(
                 borderRadius: BorderRadius.circular(15),
-
                 onTap: () {
                   Navigator.push(
                     context,
@@ -388,22 +395,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 },
-
                 child: Container(
                   width: 125,
-
                   padding: const EdgeInsets.symmetric(
                     vertical: 15,
                     horizontal: 8,
                   ),
-
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
                         .surfaceContainerHighest,
-
                     borderRadius: BorderRadius.circular(15),
-
                     boxShadow: isHovered
                         ? [
                             BoxShadow(
@@ -416,11 +418,9 @@ class _HomePageState extends State<HomePage> {
                           ]
                         : [],
                   ),
-
                   child: Column(
                     mainAxisAlignment:
                         MainAxisAlignment.center,
-
                     children: [
                       Icon(
                         _getCategoryIcon(title),
@@ -432,15 +432,12 @@ class _HomePageState extends State<HomePage> {
                           175,
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
                       Text(
                         title,
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -461,6 +458,7 @@ class _HomePageState extends State<HomePage> {
 
   IconData _getCategoryIcon(String categoryName) {
     final name = categoryName.toLowerCase();
+
     if (name.contains('medicine') ||
         name.contains('drug') ||
         name.contains('anti-biotic')) {
@@ -518,16 +516,12 @@ class _HomePageState extends State<HomePage> {
                 Icons.error_outline,
                 size: 40,
               ),
-
               const SizedBox(height: 10),
-
               Text(
                 _productsError!,
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 10),
-
               ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -598,41 +592,34 @@ class _HomePageState extends State<HomePage> {
       builder: (context, setHoverState) {
         return MouseRegion(
           cursor: SystemMouseCursors.click,
-
           onEnter: (_) {
             setHoverState(() {
               isHovered = true;
             });
           },
-
           onExit: (_) {
             setHoverState(() {
               isHovered = false;
             });
           },
-
           child: AnimatedScale(
             scale: isHovered ? 1.03 : 1.0,
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
-
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOut,
-
               transform: Matrix4.translationValues(
                 0,
                 isHovered ? -5 : 0,
                 0,
               ),
-
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ProductDetailsPage(
+                      builder: (context) => ProductDetailsPage(
                         productId: id,
                         image: imageUrl ??
                             'assets/images/ibnsina-pharma-logo.png',
@@ -642,19 +629,14 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 },
-
                 child: Container(
                   width: 180,
-
                   padding: const EdgeInsets.all(12),
-
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
                         .surfaceContainerHighest,
-
                     borderRadius: BorderRadius.circular(18),
-
                     boxShadow: isHovered
                         ? [
                             BoxShadow(
@@ -667,11 +649,9 @@ class _HomePageState extends State<HomePage> {
                           ]
                         : [],
                   ),
-
                   child: Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
-
                     children: [
                       Expanded(
                         child: imageUrl != null &&
@@ -680,7 +660,6 @@ class _HomePageState extends State<HomePage> {
                                 imageUrl,
                                 width: double.infinity,
                                 fit: BoxFit.contain,
-
                                 errorBuilder:
                                     (context, error, stackTrace) {
                                   return Image.asset(
@@ -696,25 +675,19 @@ class _HomePageState extends State<HomePage> {
                                 fit: BoxFit.contain,
                               ),
                       ),
-
                       const SizedBox(height: 8),
-
                       Text(
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 5),
-
                       Text(
                         price,
-
                         style: const TextStyle(
                           fontSize: 15,
                           color: Color.fromARGB(
@@ -746,7 +719,6 @@ class _HomePageState extends State<HomePage> {
 
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
-
         actions: [
           // DARK / LIGHT MODE
 
@@ -758,13 +730,11 @@ class _HomePageState extends State<HomePage> {
                 _isDarkMode = !_isDarkMode;
               });
             },
-
             icon: Icon(
               _isDarkMode
                   ? Icons.light_mode
                   : Icons.dark_mode,
             ),
-
             tooltip: _isDarkMode
                 ? 'Light mode'
                 : 'Dark mode',
@@ -778,11 +748,9 @@ class _HomePageState extends State<HomePage> {
                 _selectedIndex = 2;
               });
             },
-
             icon: const Icon(
               Icons.shopping_cart_outlined,
             ),
-
             tooltip: 'Cart',
           ),
         ],
@@ -796,10 +764,7 @@ class _HomePageState extends State<HomePage> {
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-
-        onDestinationSelected:
-            _onBottomNavTapped,
-
+        onDestinationSelected: _onBottomNavTapped,
         destinations: const [
           NavigationDestination(
             icon: Icon(
@@ -810,7 +775,6 @@ class _HomePageState extends State<HomePage> {
             ),
             label: 'Home',
           ),
-
           NavigationDestination(
             icon: Icon(
               Icons.search_outlined,
@@ -820,7 +784,6 @@ class _HomePageState extends State<HomePage> {
             ),
             label: 'Search',
           ),
-
           NavigationDestination(
             icon: Icon(
               Icons.shopping_cart_outlined,
@@ -830,7 +793,6 @@ class _HomePageState extends State<HomePage> {
             ),
             label: 'Cart',
           ),
-
           NavigationDestination(
             icon: Icon(
               Icons.person_outline,

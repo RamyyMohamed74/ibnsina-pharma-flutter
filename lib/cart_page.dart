@@ -4,7 +4,14 @@ import 'cart_item.dart';
 import 'api_service.dart';
 
 class CartPage extends StatefulWidget {
-  const CartPage({super.key});
+  // Callback sent from HomePage.
+  // It will be called after an order is successfully completed.
+  final VoidCallback onOrderCompleted;
+
+  const CartPage({
+    super.key,
+    required this.onOrderCompleted,
+  });
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -15,32 +22,94 @@ class _CartPageState extends State<CartPage> {
 
   // REMOVE ITEM
 
-  void removeItem(CartItem item) {
-    setState(() {
-      CartManager.removeItem(item);
-    });
+  Future<void> removeItem(CartItem item) async {
+    try {
+      // First remove the item from the backend
+      await ApiService.removeFromCart(item.productId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${item.name} removed from cart',
+      // Then remove it from the local Flutter cart
+      CartManager.removeItem(item);
+
+      if (!mounted) return;
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${item.name} removed from cart',
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   // INCREASE QUANTITY
 
-  void increaseQuantity(CartItem item) {
-    final success = CartManager.increaseQuantity(item);
+  Future<void> increaseQuantity(CartItem item) async {
+    final newQuantity = item.quantity + 1;
 
-    setState(() {});
+    // Check local stock first
+    if (newQuantity > item.stockQuantity) {
+      if (!mounted) return;
 
-    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Only ${item.stockQuantity} items available in stock',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    try {
+      // Update backend first
+      await ApiService.updateCartItem(
+        item.productId,
+        newQuantity,
+      );
+
+      // Then update local cart
+      final success = CartManager.increaseQuantity(item);
+
+      if (!mounted) return;
+
+      setState(() {});
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Only ${item.stockQuantity} items available in stock',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            ),
           ),
         ),
       );
@@ -49,10 +118,47 @@ class _CartPageState extends State<CartPage> {
 
   // DECREASE QUANTITY
 
-  void decreaseQuantity(CartItem item) {
-    setState(() {
-      CartManager.decreaseQuantity(item);
-    });
+  Future<void> decreaseQuantity(CartItem item) async {
+    final newQuantity = item.quantity - 1;
+
+    try {
+      if (newQuantity <= 0) {
+        // If quantity becomes zero,
+        // remove the product from backend
+        await ApiService.removeFromCart(
+          item.productId,
+        );
+
+        // Remove from local cart
+        CartManager.removeItem(item);
+      } else {
+        // Update backend
+        await ApiService.updateCartItem(
+          item.productId,
+          newQuantity,
+        );
+
+        // Update local cart
+        CartManager.decreaseQuantity(item);
+      }
+
+      if (!mounted) return;
+
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   // PLACE ORDER
@@ -66,6 +172,7 @@ class _CartPageState extends State<CartPage> {
           ),
         ),
       );
+
       return;
     }
 
@@ -74,21 +181,20 @@ class _CartPageState extends State<CartPage> {
     });
 
     try {
-      // Call the backend Order API
+      // Call backend Order API
       final order = await ApiService.placeOrder();
 
       if (!mounted) return;
 
-      // Get information returned by the backend
+      // Get information returned by backend
       final orderId = order['id'];
 
       final totalAmount =
           order['totalAmount'] ?? CartManager.total;
 
-      // Clear Flutter cart after successful order
+      
       CartManager.clearCart();
 
-      // Update UI
       setState(() {});
 
       // Show success dialog
@@ -116,7 +222,6 @@ class _CartPageState extends State<CartPage> {
 
                 const SizedBox(height: 15),
 
-                // ORDER NUMBER
                 if (orderId != null)
                   Text(
                     'Order #$orderId',
@@ -128,7 +233,6 @@ class _CartPageState extends State<CartPage> {
 
                 const SizedBox(height: 10),
 
-                // TOTAL
                 Text(
                   'Total: ${double.parse(totalAmount.toString()).toStringAsFixed(2)} EGP',
                   style: const TextStyle(
@@ -157,6 +261,13 @@ class _CartPageState extends State<CartPage> {
           );
         },
       );
+
+      // ORDER COMPLETED
+      // Tell HomePage to switch from Cart to Home.
+
+      if (!mounted) return;
+
+      widget.onOrderCompleted();
     } catch (e) {
       if (!mounted) return;
 
@@ -164,9 +275,9 @@ class _CartPageState extends State<CartPage> {
         SnackBar(
           content: Text(
             e.toString().replaceFirst(
-                  'Exception: ',
-                  '',
-                ),
+              'Exception: ',
+              '',
+            ),
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -189,12 +300,9 @@ class _CartPageState extends State<CartPage> {
     return Column(
       children: [
         // CART CONTENT
-        // =========================
 
         Expanded(
           child: items.isEmpty
-
-              // EMPTY CART
               ? Center(
                   child: Column(
                     mainAxisAlignment:
@@ -228,8 +336,6 @@ class _CartPageState extends State<CartPage> {
                     ],
                   ),
                 )
-
-              // PRODUCTS
               : ListView.builder(
                   padding: const EdgeInsets.all(20),
                   itemCount: items.length,
@@ -258,10 +364,6 @@ class _CartPageState extends State<CartPage> {
                                 borderRadius:
                                     BorderRadius.circular(12),
                               ),
-
-                              // FIX:
-                              // Use Image.network for API URLs
-                              // and Image.asset for local assets.
                               child: item.image.startsWith('http')
                                   ? Image.network(
                                       item.image,
@@ -273,8 +375,7 @@ class _CartPageState extends State<CartPage> {
                                             stackTrace,
                                           ) {
                                         return const Icon(
-                                          Icons
-                                              .image_not_supported,
+                                          Icons.image_not_supported,
                                           size: 40,
                                         );
                                       },
@@ -289,8 +390,7 @@ class _CartPageState extends State<CartPage> {
                                             stackTrace,
                                           ) {
                                         return const Icon(
-                                          Icons
-                                              .image_not_supported,
+                                          Icons.image_not_supported,
                                           size: 40,
                                         );
                                       },
@@ -322,8 +422,7 @@ class _CartPageState extends State<CartPage> {
 
                                   Text(
                                     item.price,
-                                    style:
-                                        const TextStyle(
+                                    style: const TextStyle(
                                       color: Color.fromARGB(
                                         255,
                                         76,
@@ -419,6 +518,7 @@ class _CartPageState extends State<CartPage> {
                                       const SizedBox(width: 10),
 
                                       // ITEM TOTAL
+
                                       Text(
                                         '${item.totalPrice.toStringAsFixed(2)} EGP',
                                         style:
@@ -472,6 +572,7 @@ class _CartPageState extends State<CartPage> {
             child: Column(
               children: [
                 // SUBTOTAL
+
                 Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
@@ -496,6 +597,7 @@ class _CartPageState extends State<CartPage> {
                 const SizedBox(height: 10),
 
                 // TOTAL
+
                 Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
@@ -528,6 +630,7 @@ class _CartPageState extends State<CartPage> {
                 const SizedBox(height: 18),
 
                 // PLACE ORDER BUTTON
+
                 SizedBox(
                   width: double.infinity,
                   height: 52,
