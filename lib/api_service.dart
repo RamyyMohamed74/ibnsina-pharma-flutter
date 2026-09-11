@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ApiService {
   static const String baseUrl = 'https://localhost:7241/api';
@@ -27,6 +28,102 @@ class ApiService {
     }
 
     return headers;
+  }
+
+  
+// ============================================================
+// USER PROFILE
+// ============================================================
+
+  static Future<Map<String, dynamic>> getMyProfile() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/Users/me/profile'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception(
+      'Failed to load profile: ${response.body}',
+    );
+  }
+
+  static Future<Map<String, dynamic>> updateMyProfile({
+    required String fullName,
+    required String email,
+    String? phoneNumber,
+    XFile? profileImage,
+  }) async {
+    final tokenHeaders = await _headers();
+
+    final request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('$baseUrl/Users/me/profile'),
+    );
+
+    request.headers['Accept'] = 'application/json';
+
+    final token = tokenHeaders['Authorization'];
+
+    if (token != null) {
+      request.headers['Authorization'] = token;
+    }
+
+    request.fields['fullName'] = fullName;
+    request.fields['email'] = email;
+
+    if (phoneNumber != null) {
+      request.fields['phoneNumber'] = phoneNumber;
+    }
+
+    if (profileImage != null) {
+      final bytes = await profileImage.readAsBytes();
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'profileImage',
+          bytes,
+          filename: profileImage.name,
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+
+    final response = await http.Response.fromStream(
+      streamedResponse,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    String message = 'Failed to update profile';
+
+    try {
+      final data = jsonDecode(response.body);
+
+      if (data['message'] != null) {
+        message = data['message'].toString();
+      }
+    } catch (_) {}
+
+    throw Exception(message);
+  }
+
+  static Future<void> deleteProfilePhoto() async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/Users/me/profile/photo'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Failed to remove profile photo: ${response.body}',
+      );
+    }
   }
 
   // LOGIN
