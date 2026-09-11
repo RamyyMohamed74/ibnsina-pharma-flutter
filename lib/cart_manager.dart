@@ -3,6 +3,30 @@ import 'cart_item.dart';
 class CartManager {
   static final List<CartItem> items = [];
 
+  // CART CHANGE LISTENERS
+
+  static final List<void Function()> _listeners = [];
+
+  // ADD LISTENER
+
+  static void addListener(void Function() listener) {
+    _listeners.add(listener);
+  }
+
+  // REMOVE LISTENER
+
+  static void removeListener(void Function() listener) {
+    _listeners.remove(listener);
+  }
+
+  // NOTIFY LISTENERS
+
+  static void _notifyListeners() {
+    for (final listener in List<void Function()>.from(_listeners)) {
+      listener();
+    }
+  }
+
   // ADD ITEM
 
   static bool addItem({
@@ -27,6 +51,10 @@ class CartManager {
       }
 
       existingItem.quantity += quantity;
+
+      // Notify HomePage and other listeners
+      _notifyListeners();
+
       return true;
     }
 
@@ -51,6 +79,9 @@ class CartManager {
       ),
     );
 
+    // Notify HomePage and other listeners
+    _notifyListeners();
+
     return true;
   }
 
@@ -58,6 +89,9 @@ class CartManager {
 
   static void removeItem(CartItem item) {
     items.remove(item);
+
+    // Notify HomePage and other listeners
+    _notifyListeners();
   }
 
   // INCREASE QUANTITY
@@ -68,6 +102,10 @@ class CartManager {
     }
 
     item.quantity++;
+
+    // Notify listeners
+    _notifyListeners();
+
     return true;
   }
 
@@ -76,6 +114,9 @@ class CartManager {
   static void decreaseQuantity(CartItem item) {
     if (item.quantity > 1) {
       item.quantity--;
+
+      // Notify listeners
+      _notifyListeners();
     }
   }
 
@@ -95,5 +136,8 @@ class CartManager {
 
   static void clearCart() {
     items.clear();
+
+    // Notify listeners
+    _notifyListeners();
   }
 }

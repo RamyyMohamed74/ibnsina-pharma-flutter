@@ -5,6 +5,7 @@ import 'profile_page.dart';
 import 'product_details_page.dart';
 import 'api_service.dart';
 import 'login_page.dart';
+import 'cart_manager.dart';
 
 class HomePage extends StatefulWidget {
   final String name;
@@ -28,6 +29,9 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   late bool _isDarkMode;
 
+  // CART
+  int _cartItemCount = 0;
+
   // PRODUCTS
   List<dynamic> _products = [];
 
@@ -46,12 +50,36 @@ class _HomePageState extends State<HomePage> {
 
     _isDarkMode = widget.isDarkMode;
 
+    // Listen for cart changes
+    CartManager.addListener(_updateCartItemCount);
+
+    // Get current cart item count
+    _updateCartItemCount();
+
     _loadProducts();
     _loadCategories();
   }
 
-  // LOAD PRODUCTS
+  // UPDATE CART ITEM COUNT
+  void _updateCartItemCount() {
+    if (!mounted) return;
 
+    setState(() {
+      // Count different products, not total quantity
+      _cartItemCount = CartManager.items.length;
+    });
+  }
+
+  // DISPOSE
+  @override
+  void dispose() {
+    // Stop listening for cart changes
+    CartManager.removeListener(_updateCartItemCount);
+
+    super.dispose();
+  }
+
+  // LOAD PRODUCTS
   Future<void> _loadProducts() async {
     try {
       final products = await ApiService.getProducts();
@@ -77,7 +105,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // LOAD CATEGORIES
-
   Future<void> _loadCategories() async {
     try {
       final categories = await ApiService.getCategories();
@@ -103,7 +130,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // LOGOUT
-
   Future<void> _logout() async {
     await ApiService.logout();
 
@@ -122,7 +148,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // BOTTOM NAVIGATION
-
   void _onBottomNavTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -133,15 +158,101 @@ class _HomePageState extends State<HomePage> {
   //
   // This is called by CartPage after a successful order.
   // It changes the selected tab back to Home.
-
   void _onOrderCompleted() {
     setState(() {
       _selectedIndex = 0;
     });
   }
 
-  // SELECTED PAGE
+  // CART ICON
+  Widget _buildCartIcon() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(
+          Icons.shopping_cart_outlined,
+        ),
 
+        // CART BADGE
+        if (_cartItemCount > 0)
+          Positioned(
+            right: -7,
+            top: -7,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 5,
+                vertical: 2,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 18,
+                minHeight: 18,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$_cartItemCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // BOTTOM CART ICON
+  Widget _buildBottomCartIcon({
+    required bool selected,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(
+          selected
+              ? Icons.shopping_cart
+              : Icons.shopping_cart_outlined,
+        ),
+
+        // CART BADGE
+        if (_cartItemCount > 0)
+          Positioned(
+            right: -7,
+            top: -7,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 1,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 17,
+                minHeight: 17,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$_cartItemCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // SELECTED PAGE
   Widget _buildSelectedPage() {
     switch (_selectedIndex) {
       case 1:
@@ -164,7 +275,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // HOME PAGE
-
   Widget _buildHomePage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -172,7 +282,6 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // WELCOME
-
           Text(
             'Welcome, ${widget.name} 👋',
             style: const TextStyle(
@@ -180,9 +289,7 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             'What are you looking for today?',
             style: TextStyle(
@@ -190,11 +297,9 @@ class _HomePageState extends State<HomePage> {
               color: Colors.grey.shade600,
             ),
           ),
-
           const SizedBox(height: 24),
 
           // SEARCH BAR
-
           GestureDetector(
             onTap: () {
               setState(() {
@@ -222,7 +327,6 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 28),
 
           // CATEGORIES
-
           const Text(
             'Categories',
             style: TextStyle(
@@ -230,15 +334,12 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 15),
-
           _buildCategoriesSection(),
 
           const SizedBox(height: 30),
 
           // FEATURED PRODUCTS
-
           const Text(
             'Featured Products',
             style: TextStyle(
@@ -246,9 +347,7 @@ class _HomePageState extends State<HomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 15),
-
           _buildProductsSection(),
         ],
       ),
@@ -256,7 +355,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // CATEGORIES SECTION
-
   Widget _buildCategoriesSection() {
     if (_isLoadingCategories) {
       return const SizedBox(
@@ -307,9 +405,7 @@ class _HomePageState extends State<HomePage> {
         child: Center(
           child: Text(
             'No categories available',
-            style: TextStyle(
-              fontSize: 16,
-            ),
+            style: TextStyle(fontSize: 16),
           ),
         ),
       );
@@ -320,9 +416,8 @@ class _HomePageState extends State<HomePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
-        separatorBuilder: (context, index) {
-          return const SizedBox(width: 12);
-        },
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final category =
               Map<String, dynamic>.from(_categories[index]);
@@ -343,7 +438,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // CATEGORY CARD WITH HOVER ANIMATION
-
   Widget _buildCategoryCard(
     BuildContext context, {
     required int categoryId,
@@ -412,15 +506,13 @@ class _HomePageState extends State<HomePage> {
                               blurRadius: 12,
                               spreadRadius: 1,
                               offset: const Offset(0, 5),
-                              color:
-                                  Colors.black.withOpacity(0.15),
+                              color: Colors.black.withOpacity(0.15),
                             ),
                           ]
                         : [],
                   ),
                   child: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         _getCategoryIcon(title),
@@ -455,7 +547,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // CATEGORY ICON
-
   IconData _getCategoryIcon(String categoryName) {
     final name = categoryName.toLowerCase();
 
@@ -494,7 +585,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // PRODUCTS SECTION
-
   Widget _buildProductsSection() {
     if (_isLoadingProducts) {
       return const SizedBox(
@@ -545,9 +635,7 @@ class _HomePageState extends State<HomePage> {
         child: Center(
           child: Text(
             'No products available',
-            style: TextStyle(
-              fontSize: 16,
-            ),
+            style: TextStyle(fontSize: 16),
           ),
         ),
       );
@@ -558,9 +646,8 @@ class _HomePageState extends State<HomePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _products.length,
-        separatorBuilder: (context, index) {
-          return const SizedBox(width: 15);
-        },
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: 15),
         itemBuilder: (context, index) {
           final product =
               Map<String, dynamic>.from(_products[index]);
@@ -578,7 +665,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // PRODUCT CARD WITH HOVER ANIMATION
-
   Widget _buildProductCard(
     BuildContext context, {
     required int id,
@@ -643,8 +729,7 @@ class _HomePageState extends State<HomePage> {
                               blurRadius: 14,
                               spreadRadius: 1,
                               offset: const Offset(0, 6),
-                              color:
-                                  Colors.black.withOpacity(0.15),
+                              color: Colors.black.withOpacity(0.15),
                             ),
                           ]
                         : [],
@@ -711,17 +796,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   // BUILD
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // APP BAR
-
       appBar: AppBar(
         title: const Text('Ibn Sina Pharma'),
         actions: [
           // DARK / LIGHT MODE
-
           IconButton(
             onPressed: () {
               widget.onToggleTheme();
@@ -741,65 +823,48 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // CART
-
           IconButton(
             onPressed: () {
               setState(() {
                 _selectedIndex = 2;
               });
             },
-            icon: const Icon(
-              Icons.shopping_cart_outlined,
-            ),
+            icon: _buildCartIcon(),
             tooltip: 'Cart',
           ),
         ],
       ),
 
       // BODY
-
       body: _buildSelectedPage(),
 
       // BOTTOM NAVIGATION
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onBottomNavTapped,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(
-              Icons.home_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.home,
-            ),
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.search_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.search,
-            ),
+          const NavigationDestination(
+            icon: Icon(Icons.search_outlined),
+            selectedIcon: Icon(Icons.search),
             label: 'Search',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.shopping_cart_outlined,
+            icon: _buildBottomCartIcon(
+              selected: false,
             ),
-            selectedIcon: Icon(
-              Icons.shopping_cart,
+            selectedIcon: _buildBottomCartIcon(
+              selected: true,
             ),
             label: 'Cart',
           ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.person_outline,
-            ),
-            selectedIcon: Icon(
-              Icons.person,
-            ),
+          const NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

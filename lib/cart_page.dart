@@ -192,7 +192,6 @@ class _CartPageState extends State<CartPage> {
       final totalAmount =
           order['totalAmount'] ?? CartManager.total;
 
-      
       CartManager.clearCart();
 
       setState(() {});
