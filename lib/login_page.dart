@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 import 'api_service.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onToggleTheme;
@@ -342,9 +343,22 @@ class _LoginPageState extends State<LoginPage> {
                         "Don't have an account?",
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push (
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegisterPage(
+                                onToggleTheme: widget.onToggleTheme,
+                                isDarkMode: widget.isDarkMode,
+                               ),
+                            ),
+                          );
+                        },
                         child: const Text(
                           'Create Account',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
