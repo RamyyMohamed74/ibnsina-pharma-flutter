@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'orders_page.dart';
+import 'my_addresses_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final String name;
@@ -80,7 +81,15 @@ class ProfilePage extends StatelessWidget {
               Icons.arrow_forward_ios,
               size: 16,
             ),
-            onTap: () {},
+            onTap: () {
+              Navigator.push (
+                context,
+                MaterialPageRoute(
+                  builder: (context)=> 
+                  const MyAddressesPage(),
+                  ),
+              );
+            },
           ),
 
           // SETTINGS
@@ -98,7 +107,7 @@ class ProfilePage extends StatelessWidget {
             onTap: () {},
           ),
 
-          const SizedBox(height: 130),
+          const SizedBox(height: 200),
 
           // LOGOUT BUTTON
           SizedBox(
