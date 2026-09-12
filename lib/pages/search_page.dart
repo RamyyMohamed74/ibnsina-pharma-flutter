@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'product_details_page.dart';
-import 'api_service.dart';
+import '../api_service.dart';
 
 class SearchPage extends StatefulWidget {
   final int? initialCategoryId;

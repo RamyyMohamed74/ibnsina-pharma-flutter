@@ -1,9 +1,8 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'api_service.dart';
+import '../../api_service.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> profile;

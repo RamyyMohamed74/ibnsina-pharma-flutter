@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cart_manager.dart';
 import 'cart_item.dart';
-import 'api_service.dart';
+import '../api_service.dart';
 
 class CartPage extends StatefulWidget {
   // Callback sent from HomePage.

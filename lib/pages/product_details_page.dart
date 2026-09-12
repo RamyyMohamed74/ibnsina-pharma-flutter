@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'cart_manager.dart';
-import 'api_service.dart';
+import '../cart/cart_manager.dart';
+import '../api_service.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final int productId;

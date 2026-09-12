@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'orders_page.dart';
+import '../../order/orders_page.dart';
 import 'my_addresses_page.dart';
 import 'edit_profile_page.dart';
-import 'api_service.dart';
+import '../../api_service.dart';
 
 class ProfilePage extends StatefulWidget {
   final String name;

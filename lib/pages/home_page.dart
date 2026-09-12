@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'search_page.dart';
-import 'cart_page.dart';
-import 'profile_page.dart';
+import '../cart/cart_page.dart';
+import 'profile_page/profile_page.dart';
 import 'product_details_page.dart';
-import 'api_service.dart';
+import '../api_service.dart';
 import 'login_page.dart';
-import 'cart_manager.dart';
+import '../cart/cart_manager.dart';
 
 class HomePage extends StatefulWidget {
   final String name;
